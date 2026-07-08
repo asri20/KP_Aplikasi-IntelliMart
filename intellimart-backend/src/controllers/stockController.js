@@ -1,188 +1,553 @@
 // src/controllers/stockController.js
-// Controller untuk modul Manajemen Stok
 
-const StockModel = require('../models/stockModel');
+const db = require("../config/db");
+
+const StoreModel = require("../models/storeModel");
+const VariantModel = require("../models/variantModel");
+const StockBalanceModel = require("../models/stockBalanceModel");
+const StockMovementModel = require("../models/stockMovementModel");
 
 const StockController = {
 
   /**
-   * POST /api/stocks/in
-   * Stok masuk - menambah stok pada varian
-   * Body: { variant_id, qty, keterangan? }
+   * =====================================================
+   * STOCK IN
+   * =====================================================
    */
   stockIn: async (req, res) => {
+
+    const client = await db.getClient();
+
     try {
-      const { variant_id, qty, keterangan } = req.body;
 
-      // Validasi field wajib
-      if (!variant_id) {
-        return res.status(400).json({ success: false, message: 'ID varian wajib diisi' });
-      }
+      const {
+        store_id,
+        variant_id,
+        quantity,
+        notes,
+        reference_type,
+        reference_id,
+        created_by
+      } = req.body;
 
-      if (qty === undefined || qty === null || qty === '') {
-        return res.status(400).json({ success: false, message: 'Jumlah (qty) wajib diisi' });
-      }
+      // ===========================
+      // VALIDASI
+      // ===========================
 
-      const qtyNum = parseInt(qty);
-
-      // Validasi qty positif
-      if (isNaN(qtyNum) || qtyNum <= 0) {
+      if (!store_id || !variant_id || quantity === undefined) {
         return res.status(400).json({
           success: false,
-          message: 'Jumlah stok masuk harus berupa angka positif (minimal 1)',
+          message: "store_id, variant_id dan quantity wajib diisi."
         });
       }
 
-      // Cek apakah varian ada
-      const variant = await StockModel.findVariantById(variant_id);
+      if (Number(quantity) <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity harus lebih besar dari 0."
+        });
+      }
+
+      // cek toko
+
+      const store = await StoreModel.findById(store_id);
+
+      if (!store) {
+        return res.status(404).json({
+          success: false,
+          message: "Toko tidak ditemukan."
+        });
+      }
+
+      // cek varian
+
+      const variant = await VariantModel.findById(variant_id);
+
       if (!variant) {
         return res.status(404).json({
           success: false,
-          message: `Varian dengan ID ${variant_id} tidak ditemukan`,
+          message: "Variant tidak ditemukan."
         });
       }
 
-      const stokSebelum = parseInt(variant.stock);
+      // ===========================
+      // TRANSAKSI
+      // ===========================
 
-      // Update stok
-      const updated = await StockModel.stockIn(variant_id, qtyNum);
-      const stokSesudah = parseInt(updated.stock);
+      await client.query("BEGIN");
+
+      let balance =
+        await StockBalanceModel.findByStoreVariant(
+          client,
+          store_id,
+          variant_id
+        );
+
+      if (!balance) {
+
+        balance =
+          await StockBalanceModel.createBalance(
+            client,
+            store_id,
+            variant_id,
+            0,
+            0
+          );
+
+      }
+
+      const currentQty =
+        Number(balance.quantity_available);
+
+      const newQty =
+        currentQty + Number(quantity);
+
+      await StockBalanceModel.updateBalance(
+        client,
+        store_id,
+        variant_id,
+        newQty
+      );
+
+      await StockMovementModel.createMovement(client, {
+
+        store_id,
+
+        variant_id,
+
+        movement_type: "in",
+
+        quantity,
+
+        reference_type,
+
+        reference_id,
+
+        notes,
+
+        created_by
+
+      });
+
+      await client.query("COMMIT");
 
       return res.status(200).json({
+
         success: true,
-        message: `Stok masuk berhasil dicatat. ${variant.product_name} - ${variant.variant_name}`,
+
+        message: "Stock In berhasil.",
+
         data: {
-          variant_id:    updated.variant_id,
-          product_name:  variant.product_name,
-          variant_name:  variant.variant_name,
-          sku:           variant.sku,
-          qty_masuk:     qtyNum,
-          stok_sebelum:  stokSebelum,
-          stok_sesudah:  stokSesudah,
-          keterangan:    keterangan || 'Stok masuk',
-          updated_at:    updated.updated_at,
-        },
+
+          store_id,
+
+          store_name: store.store_name,
+
+          variant_id,
+
+          variant_name: variant.variant_name,
+
+          quantity,
+
+          stock_before: currentQty,
+
+          stock_after: newQty
+
+        }
+
       });
-    } catch (error) {
-      console.error('StockController.stockIn error:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal memproses stok masuk',
-        error: error.message,
-      });
+
     }
+    catch (err) {
+
+      await client.query("ROLLBACK");
+
+      console.error(err);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: err.message
+
+      });
+
+    }
+    finally {
+
+      client.release();
+
+    }
+
   },
 
+
+
   /**
-   * POST /api/stocks/out
-   * Stok keluar - mengurangi stok pada varian
-   * Body: { variant_id, qty, keterangan? }
+   * =====================================================
+   * STOCK OUT
+   * =====================================================
    */
   stockOut: async (req, res) => {
+
+    const client = await db.getClient();
+
     try {
-      const { variant_id, qty, keterangan } = req.body;
 
-      // Validasi field wajib
-      if (!variant_id) {
-        return res.status(400).json({ success: false, message: 'ID varian wajib diisi' });
-      }
+      const {
 
-      if (qty === undefined || qty === null || qty === '') {
-        return res.status(400).json({ success: false, message: 'Jumlah (qty) wajib diisi' });
-      }
+        store_id,
 
-      const qtyNum = parseInt(qty);
+        variant_id,
 
-      // Validasi qty positif
-      if (isNaN(qtyNum) || qtyNum <= 0) {
+        quantity,
+
+        notes,
+
+        reference_type,
+
+        reference_id,
+
+        created_by
+
+      } = req.body;
+
+      // ===========================
+      // VALIDASI
+      // ===========================
+
+      if (!store_id || !variant_id || quantity === undefined) {
+
         return res.status(400).json({
+
           success: false,
-          message: 'Jumlah stok keluar harus berupa angka positif (minimal 1)',
+
+          message: "store_id, variant_id dan quantity wajib diisi."
+
         });
+
       }
 
-      // Cek apakah varian ada
-      const variant = await StockModel.findVariantById(variant_id);
-      if (!variant) {
+      if (Number(quantity) <= 0) {
+
+        return res.status(400).json({
+
+          success: false,
+
+          message: "Quantity harus lebih besar dari 0."
+
+        });
+
+      }
+
+      // cek toko
+
+      const store = await StoreModel.findById(store_id);
+
+      if (!store) {
+
         return res.status(404).json({
+
           success: false,
-          message: `Varian dengan ID ${variant_id} tidak ditemukan`,
+
+          message: "Toko tidak ditemukan."
+
         });
+
       }
 
-      const stokSebelum = parseInt(variant.stock);
+      // cek varian
 
-      // Proses stok keluar (model akan validasi tidak minus)
-      const updated = await StockModel.stockOut(variant_id, qtyNum);
-      const stokSesudah = parseInt(updated.stock);
+      const variant = await VariantModel.findById(variant_id);
 
-      // Peringatan jika stok rendah setelah pengurangan
-      const warning = stokSesudah <= parseInt(variant.minimum_stock)
-        ? `⚠️ Perhatian: Stok sekarang (${stokSesudah}) berada di bawah atau sama dengan minimum stok (${variant.minimum_stock})`
-        : null;
+      if (!variant) {
+
+        return res.status(404).json({
+
+          success: false,
+
+          message: "Variant tidak ditemukan."
+
+        });
+
+      }
+
+      await client.query("BEGIN");
+
+      const balance =
+        await StockBalanceModel.findByStoreVariant(
+          client,
+          store_id,
+          variant_id
+        );
+
+      if (!balance) {
+
+        throw new Error("Data stok belum tersedia.");
+
+      }
+
+      const currentQty =
+        Number(balance.quantity_available);
+
+      if (currentQty < Number(quantity)) {
+
+        throw new Error("Stok tidak mencukupi.");
+
+      }
+
+      const newQty =
+        currentQty - Number(quantity);
+
+      await StockBalanceModel.updateBalance(
+
+        client,
+
+        store_id,
+
+        variant_id,
+
+        newQty
+
+      );
+
+      await StockMovementModel.createMovement(client, {
+
+        store_id,
+
+        variant_id,
+
+        movement_type: "out",
+
+        quantity,
+
+        reference_type,
+
+        reference_id,
+
+        notes,
+
+        created_by
+
+      });
+
+      await client.query("COMMIT");
 
       return res.status(200).json({
-        success: true,
-        message: `Stok keluar berhasil dicatat. ${variant.product_name} - ${variant.variant_name}`,
-        data: {
-          variant_id:    updated.variant_id,
-          product_name:  variant.product_name,
-          variant_name:  variant.variant_name,
-          sku:           variant.sku,
-          qty_keluar:    qtyNum,
-          stok_sebelum:  stokSebelum,
-          stok_sesudah:  stokSesudah,
-          minimum_stock: parseInt(variant.minimum_stock),
-          keterangan:    keterangan || 'Stok keluar',
-          warning,
-          updated_at:    updated.updated_at,
-        },
-      });
-    } catch (error) {
-      console.error('StockController.stockOut error:', error);
 
-      // Error stok tidak mencukupi
-      if (error.message.includes('Stok tidak mencukupi')) {
-        return res.status(400).json({
-          success: false,
-          message: error.message,
-          error: 'INSUFFICIENT_STOCK',
-        });
-      }
+        success: true,
+
+        message: "Stock Out berhasil.",
+
+        data: {
+
+          store_id,
+
+          store_name: store.store_name,
+
+          variant_id,
+
+          variant_name: variant.variant_name,
+
+          quantity,
+
+          stock_before: currentQty,
+
+          stock_after: newQty
+
+        }
+
+      });
+
+    }
+    catch (err) {
+
+      await client.query("ROLLBACK");
+
+      console.error(err);
 
       return res.status(500).json({
+
         success: false,
-        message: 'Gagal memproses stok keluar',
-        error: error.message,
+
+        message: err.message
+
       });
+
     }
+    finally {
+
+      client.release();
+
+    }
+
   },
+    /**
+   * =====================================================
+   * LIST SEMUA STOCK
+   * =====================================================
+   */
+  getAllStock: async (req, res) => {
+
+    try {
+
+      const data =
+        await StockBalanceModel.findAll();
+
+      return res.status(200).json({
+
+        success: true,
+
+        total: data.length,
+
+        data
+
+      });
+
+    }
+    catch (err) {
+
+      console.error(err);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: err.message
+
+      });
+
+    }
+
+  },
+
+
 
   /**
-   * GET /api/stocks/low-stock
-   * Ambil semua produk dengan stok di bawah atau sama dengan minimum stok
+   * =====================================================
+   * HISTORY STOCK MOVEMENT
+   * =====================================================
    */
-  getLowStock: async (req, res) => {
+  getMovementHistory: async (req, res) => {
+
     try {
-      const data = await StockModel.getLowStock();
+
+      const {
+
+        store_id,
+
+        variant_id
+
+      } = req.query;
+
+      let data;
+
+      if (store_id && variant_id) {
+
+        data =
+          await StockMovementModel.findByStoreVariant(
+            store_id,
+            variant_id
+          );
+
+      }
+      else if (store_id) {
+
+        data =
+          await StockMovementModel.findByStore(
+            store_id
+          );
+
+      }
+      else if (variant_id) {
+
+        data =
+          await StockMovementModel.findByVariant(
+            variant_id
+          );
+
+      }
+      else {
+
+        data =
+          await StockMovementModel.findAll();
+
+      }
 
       return res.status(200).json({
+
         success: true,
-        message: data.length > 0
-          ? `Ditemukan ${data.length} varian dengan stok rendah`
-          : 'Tidak ada varian dengan stok rendah',
-        count: data.length,
-        data,
+
+        total: data.length,
+
+        data
+
       });
-    } catch (error) {
-      console.error('StockController.getLowStock error:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Gagal mengambil data stok rendah',
-        error: error.message,
-      });
+
     }
+    catch (err) {
+
+      console.error(err);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: err.message
+
+      });
+
+    }
+
   },
+
+
+
+  /**
+   * =====================================================
+   * LOW STOCK
+   * =====================================================
+   */
+  getLowStock: async (req, res) => {
+
+    try {
+
+      const stocks =
+        await StockBalanceModel.findAll();
+
+      const lowStocks =
+        stocks.filter(item =>
+          Number(item.quantity_available) <=
+          Number(item.min_stock)
+        );
+
+      return res.status(200).json({
+
+        success: true,
+
+        total: lowStocks.length,
+
+        data: lowStocks
+
+      });
+
+    }
+    catch (err) {
+
+      console.error(err);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: err.message
+
+      });
+
+    }
+
+  }
+
 };
 
 module.exports = StockController;
