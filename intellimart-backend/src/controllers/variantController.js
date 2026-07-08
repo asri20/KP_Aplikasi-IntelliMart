@@ -1,5 +1,4 @@
 // src/controllers/variantController.js
-// Controller untuk modul Varian Produk
 
 const VariantModel = require('../models/variantModel');
 const ProductModel = require('../models/productModel');
@@ -7,222 +6,521 @@ const ProductModel = require('../models/productModel');
 const VariantController = {
 
   /**
-   * GET /api/variants
-   * Ambil semua varian
+   * =====================================================
+   * GET ALL VARIANTS
+   * =====================================================
    */
   getAll: async (req, res) => {
     try {
+
       const data = await VariantModel.findAll();
+
       return res.status(200).json({
         success: true,
         message: 'Data varian berhasil diambil',
-        count: data.length,
-        data,
+        total: data.length,
+        data
       });
+
     } catch (error) {
-      console.error('VariantController.getAll error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal mengambil data varian', error: error.message });
+
+      console.error('VariantController.getAll:', error);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal mengambil data varian',
+        error: error.message
+      });
+
     }
   },
 
   /**
-   * GET /api/variants/:id
+   * =====================================================
+   * GET VARIANT BY ID
+   * =====================================================
    */
   getById: async (req, res) => {
+
     try {
+
       const { id } = req.params;
 
       if (isNaN(id)) {
-        return res.status(400).json({ success: false, message: 'ID varian tidak valid' });
+
+        return res.status(400).json({
+          success: false,
+          message: 'ID varian tidak valid'
+        });
+
       }
 
-      const data = await VariantModel.findById(id);
+      const variant = await VariantModel.findById(id);
 
-      if (!data) {
-        return res.status(404).json({ success: false, message: `Varian dengan ID ${id} tidak ditemukan` });
+      if (!variant) {
+
+        return res.status(404).json({
+          success: false,
+          message: 'Varian tidak ditemukan'
+        });
+
       }
 
-      return res.status(200).json({ success: true, message: 'Data varian berhasil diambil', data });
-    } catch (error) {
-      console.error('VariantController.getById error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal mengambil data varian', error: error.message });
-    }
-  },
-
-  /**
-   * POST /api/variants
-   * Body: { product_id, sku, barcode?, variant_name, cost_price, selling_price, stock?, minimum_stock?, is_active? }
-   */
-  create: async (req, res) => {
-    try {
-      const {
-        product_id, sku, barcode, variant_name,
-        cost_price, selling_price, stock, minimum_stock, is_active
-      } = req.body;
-
-      // Validasi field wajib
-      if (!product_id)                         return res.status(400).json({ success: false, message: 'ID produk wajib diisi' });
-      if (!sku || sku.trim() === '')           return res.status(400).json({ success: false, message: 'SKU wajib diisi' });
-      if (!variant_name || variant_name.trim() === '') return res.status(400).json({ success: false, message: 'Nama varian wajib diisi' });
-
-      // Validasi harga tidak boleh negatif
-      if (cost_price !== undefined && parseFloat(cost_price) < 0) {
-        return res.status(400).json({ success: false, message: 'Harga modal tidak boleh negatif' });
-      }
-      if (selling_price !== undefined && parseFloat(selling_price) < 0) {
-        return res.status(400).json({ success: false, message: 'Harga jual tidak boleh negatif' });
-      }
-
-      // Validasi stok tidak boleh negatif
-      if (stock !== undefined && parseInt(stock) < 0) {
-        return res.status(400).json({ success: false, message: 'Stok tidak boleh negatif' });
-      }
-      if (minimum_stock !== undefined && parseInt(minimum_stock) < 0) {
-        return res.status(400).json({ success: false, message: 'Minimum stok tidak boleh negatif' });
-      }
-
-      // Validasi produk ada
-      const product = await ProductModel.findById(product_id);
-      if (!product) {
-        return res.status(404).json({ success: false, message: `Produk dengan ID ${product_id} tidak ditemukan` });
-      }
-
-      // Validasi SKU unik
-      const existingSku = await VariantModel.findBySku(sku);
-      if (existingSku) {
-        return res.status(409).json({ success: false, message: `SKU '${sku}' sudah digunakan` });
-      }
-
-      // Validasi Barcode unik (jika diisi)
-      if (barcode) {
-        const existingBarcode = await VariantModel.findByBarcode(barcode);
-        if (existingBarcode) {
-          return res.status(409).json({ success: false, message: `Barcode '${barcode}' sudah digunakan` });
-        }
-      }
-
-      const data = await VariantModel.create({
-        product_id,
-        sku: sku.trim(),
-        barcode: barcode ? barcode.trim() : null,
-        variant_name: variant_name.trim(),
-        cost_price,
-        selling_price,
-        stock,
-        minimum_stock,
-        is_active,
+      return res.status(200).json({
+        success: true,
+        data: variant
       });
 
-      return res.status(201).json({ success: true, message: 'Varian produk berhasil dibuat', data });
     } catch (error) {
-      console.error('VariantController.create error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal membuat varian produk', error: error.message });
+
+      console.error('VariantController.getById:', error);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal mengambil data varian',
+        error: error.message
+      });
+
     }
+
   },
 
   /**
-   * PUT /api/variants/:id
+   * =====================================================
+   * CREATE VARIANT
+   * =====================================================
    */
-  update: async (req, res) => {
+  create: async (req, res) => {
+
     try {
-      const { id } = req.params;
+
       const {
-        product_id, sku, barcode, variant_name,
-        cost_price, selling_price, stock, minimum_stock, is_active
+
+        product_id,
+        sku,
+        barcode,
+        variant_name,
+        cost_price,
+        selling_price,
+        weight,
+        is_active
+
       } = req.body;
 
+      // =============================
+      // VALIDASI
+      // =============================
+
+      if (!product_id) {
+
+        return res.status(400).json({
+          success: false,
+          message: 'product_id wajib diisi'
+        });
+
+      }
+
+      if (!sku || sku.trim() === '') {
+
+        return res.status(400).json({
+          success: false,
+          message: 'SKU wajib diisi'
+        });
+
+      }
+
+      if (!variant_name || variant_name.trim() === '') {
+
+        return res.status(400).json({
+          success: false,
+          message: 'Nama varian wajib diisi'
+        });
+
+      }
+
+      if (Number(cost_price) < 0) {
+
+        return res.status(400).json({
+          success: false,
+          message: 'Harga modal tidak boleh negatif'
+        });
+
+      }
+
+      if (Number(selling_price) < 0) {
+
+        return res.status(400).json({
+          success: false,
+          message: 'Harga jual tidak boleh negatif'
+        });
+
+      }
+
+      // =============================
+      // CEK PRODUCT
+      // =============================
+
+      const product = await ProductModel.findById(product_id);
+
+      if (!product) {
+
+        return res.status(404).json({
+          success: false,
+          message: 'Produk tidak ditemukan'
+        });
+
+      }
+
+      // =============================
+      // CEK SKU
+      // =============================
+
+      const skuExist = await VariantModel.findBySku(sku);
+
+      if (skuExist) {
+
+        return res.status(409).json({
+          success: false,
+          message: 'SKU sudah digunakan'
+        });
+
+      }
+
+      // =============================
+      // CEK BARCODE
+      // =============================
+
+      if (barcode) {
+
+        const barcodeExist =
+          await VariantModel.findByBarcode(barcode);
+
+        if (barcodeExist) {
+
+          return res.status(409).json({
+            success: false,
+            message: 'Barcode sudah digunakan'
+          });
+
+        }
+
+      }
+
+      // =============================
+      // INSERT
+      // =============================
+
+      const data = await VariantModel.create({
+
+        product_id,
+
+        sku: sku.trim(),
+
+        barcode:
+          barcode && barcode.trim() !== ''
+            ? barcode.trim()
+            : null,
+
+        variant_name: variant_name.trim(),
+
+        cost_price,
+
+        selling_price,
+
+        weight,
+
+        is_active:
+          is_active !== undefined
+            ? is_active
+            : true
+
+      });
+
+      return res.status(201).json({
+
+        success: true,
+
+        message: 'Varian berhasil ditambahkan',
+
+        data
+
+      });
+
+    } catch (error) {
+
+      console.error('VariantController.create:', error);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: 'Gagal membuat varian',
+
+        error: error.message
+
+      });
+
+    }
+
+  },
+    /**
+   * =====================================================
+   * UPDATE VARIANT
+   * =====================================================
+   */
+  update: async (req, res) => {
+
+    try {
+
+      const { id } = req.params;
+
       if (isNaN(id)) {
-        return res.status(400).json({ success: false, message: 'ID varian tidak valid' });
-      }
 
-      // Validasi field wajib
-      if (!product_id)                         return res.status(400).json({ success: false, message: 'ID produk wajib diisi' });
-      if (!sku || sku.trim() === '')           return res.status(400).json({ success: false, message: 'SKU wajib diisi' });
-      if (!variant_name || variant_name.trim() === '') return res.status(400).json({ success: false, message: 'Nama varian wajib diisi' });
+        return res.status(400).json({
+          success: false,
+          message: 'ID varian tidak valid'
+        });
 
-      // Validasi harga tidak boleh negatif
-      if (cost_price !== undefined && parseFloat(cost_price) < 0) {
-        return res.status(400).json({ success: false, message: 'Harga modal tidak boleh negatif' });
-      }
-      if (selling_price !== undefined && parseFloat(selling_price) < 0) {
-        return res.status(400).json({ success: false, message: 'Harga jual tidak boleh negatif' });
-      }
-
-      // Validasi stok tidak boleh negatif
-      if (stock !== undefined && parseInt(stock) < 0) {
-        return res.status(400).json({ success: false, message: 'Stok tidak boleh negatif' });
-      }
-      if (minimum_stock !== undefined && parseInt(minimum_stock) < 0) {
-        return res.status(400).json({ success: false, message: 'Minimum stok tidak boleh negatif' });
       }
 
       const existing = await VariantModel.findById(id);
+
       if (!existing) {
-        return res.status(404).json({ success: false, message: `Varian dengan ID ${id} tidak ditemukan` });
+
+        return res.status(404).json({
+          success: false,
+          message: 'Varian tidak ditemukan'
+        });
+
       }
 
-      // Validasi produk ada
-      const product = await ProductModel.findById(product_id);
-      if (!product) {
-        return res.status(404).json({ success: false, message: `Produk dengan ID ${product_id} tidak ditemukan` });
-      }
+      const {
 
-      // Validasi SKU unik (kecuali dirinya sendiri)
-      const existingSku = await VariantModel.findBySku(sku, id);
-      if (existingSku) {
-        return res.status(409).json({ success: false, message: `SKU '${sku}' sudah digunakan` });
-      }
-
-      // Validasi Barcode unik (kecuali dirinya sendiri, jika diisi)
-      if (barcode) {
-        const existingBarcode = await VariantModel.findByBarcode(barcode, id);
-        if (existingBarcode) {
-          return res.status(409).json({ success: false, message: `Barcode '${barcode}' sudah digunakan` });
-        }
-      }
-
-      const data = await VariantModel.update(id, {
         product_id,
-        sku: sku.trim(),
-        barcode: barcode ? barcode.trim() : null,
-        variant_name: variant_name.trim(),
+        sku,
+        barcode,
+        variant_name,
         cost_price,
         selling_price,
-        stock,
-        minimum_stock,
-        is_active: is_active !== undefined ? is_active : existing.is_active,
+        weight,
+        is_active
+
+      } = req.body;
+
+      // =============================
+      // VALIDASI PRODUCT
+      // =============================
+
+      if (product_id) {
+
+        const product =
+          await ProductModel.findById(product_id);
+
+        if (!product) {
+
+          return res.status(404).json({
+            success: false,
+            message: 'Produk tidak ditemukan'
+          });
+
+        }
+
+      }
+
+      // =============================
+      // VALIDASI SKU
+      // =============================
+
+      if (sku) {
+
+        const skuExist =
+          await VariantModel.findBySku(sku, id);
+
+        if (skuExist) {
+
+          return res.status(409).json({
+            success: false,
+            message: 'SKU sudah digunakan'
+          });
+
+        }
+
+      }
+
+      // =============================
+      // VALIDASI BARCODE
+      // =============================
+
+      if (barcode) {
+
+        const barcodeExist =
+          await VariantModel.findByBarcode(barcode, id);
+
+        if (barcodeExist) {
+
+          return res.status(409).json({
+            success: false,
+            message: 'Barcode sudah digunakan'
+          });
+
+        }
+
+      }
+
+      // =============================
+      // UPDATE
+      // =============================
+
+      const data = await VariantModel.update(id, {
+
+        product_id:
+          product_id ?? existing.product_id,
+
+        sku:
+          sku
+            ? sku.trim()
+            : existing.sku,
+
+        barcode:
+          barcode !== undefined
+            ? (barcode === '' ? null : barcode.trim())
+            : existing.barcode,
+
+        variant_name:
+          variant_name
+            ? variant_name.trim()
+            : existing.variant_name,
+
+        cost_price:
+          cost_price ?? existing.cost_price,
+
+        selling_price:
+          selling_price ?? existing.selling_price,
+
+        weight:
+          weight ?? existing.weight,
+
+        is_active:
+          is_active !== undefined
+            ? is_active
+            : existing.is_active
+
       });
 
-      return res.status(200).json({ success: true, message: 'Varian produk berhasil diperbarui', data });
+      return res.status(200).json({
+
+        success: true,
+
+        message: 'Varian berhasil diperbarui',
+
+        data
+
+      });
+
     } catch (error) {
-      console.error('VariantController.update error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal memperbarui varian produk', error: error.message });
+
+      console.error('VariantController.update:', error);
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: 'Gagal memperbarui varian',
+
+        error: error.message
+
+      });
+
     }
+
   },
 
+
+
   /**
-   * DELETE /api/variants/:id
+   * =====================================================
+   * DELETE VARIANT
+   * =====================================================
    */
   delete: async (req, res) => {
+
     try {
+
       const { id } = req.params;
 
       if (isNaN(id)) {
-        return res.status(400).json({ success: false, message: 'ID varian tidak valid' });
+
+        return res.status(400).json({
+
+          success: false,
+
+          message: 'ID varian tidak valid'
+
+        });
+
       }
 
-      const data = await VariantModel.delete(id);
+      const data =
+        await VariantModel.delete(id);
 
       if (!data) {
-        return res.status(404).json({ success: false, message: `Varian dengan ID ${id} tidak ditemukan` });
+
+        return res.status(404).json({
+
+          success: false,
+
+          message: 'Varian tidak ditemukan'
+
+        });
+
       }
 
-      return res.status(200).json({ success: true, message: 'Varian produk berhasil dihapus', data });
+      return res.status(200).json({
+
+        success: true,
+
+        message: 'Varian berhasil dihapus',
+
+        data
+
+      });
+
     } catch (error) {
-      console.error('VariantController.delete error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal menghapus varian produk', error: error.message });
+
+      console.error('VariantController.delete:', error);
+
+      if (
+        error.message.includes('foreign key') ||
+        error.message.includes('constraint')
+      ) {
+
+        return res.status(409).json({
+
+          success: false,
+
+          message:
+            'Varian tidak dapat dihapus karena masih digunakan.',
+
+          error: 'CONSTRAINT_VIOLATION'
+
+        });
+
+      }
+
+      return res.status(500).json({
+
+        success: false,
+
+        message: 'Gagal menghapus varian',
+
+        error: error.message
+
+      });
+
     }
-  },
+
+  }
+
 };
 
 module.exports = VariantController;
