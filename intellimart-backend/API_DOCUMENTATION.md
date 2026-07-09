@@ -1087,4 +1087,3 @@ Semua endpoint di atas telah diuji menggunakan Postman.
 - Semua endpoint menggunakan JSON.
 - Semua endpoint telah diuji menggunakan Postman.
 - Dokumentasi ini merupakan implementasi Backend IntelliMart untuk Master Data dan Inventory Management (Module 1), dan sudah selaras dengan implementasi backend yang telah dikerjakan (Product, Variant, dan Stock Management).
-- File ini dapat langsung disimpan sebagai `API_DOCUMENTATION.md` di root folder `intellimart-backend/` dan dibagikan ke tim frontend maupun dilampirkan pada laporan KP.
