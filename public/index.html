@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IntelliMart - Dashboard & Analitik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🛒 IntelliMart</h1>
+                <p>Dashboard & Analitik</p>
+            </div>
+            <nav>
+                <a href="#" class="nav-item active" data-section="dashboard">📊 Dashboard</a>
+                <a href="#" class="nav-item" data-section="top-products">🏆 Produk Terlaris</a>
+                <a href="#" class="nav-item" data-section="profit">💰 Laporan Profit</a>
+                <a href="#" class="nav-item" data-section="trend">📈 Tren Penjualan</a>
+            </nav>
+            <div class="store-selector">
+                <label>Pilih Toko:</label>
+                <input type="number" id="storeId" value="1" min="1">
+                <button onclick="loadAll()">Muat Data</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="section active">
+                <h2>📊 Ringkasan Dashboard</h2>
+                <div class="cards" id="summary-cards">
+                    <div class="card card-revenue">
+                        <div class="card-icon">💵</div>
+                        <div class="card-info">
+                            <p class="card-label">Total Pendapatan</p>
+                            <h3 id="total-revenue">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-lunas">
+                        <div class="card-icon">✅</div>
+                        <div class="card-info">
+                            <p class="card-label">Transaksi LUNAS</p>
+                            <h3 id="total-lunas">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-unpaid">
+                        <div class="card-icon">⏳</div>
+                        <div class="card-info">
+                            <p class="card-label">Transaksi UNPAID</p>
+                            <h3 id="total-unpaid">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-sold">
+                        <div class="card-icon">📦</div>
+                        <div class="card-info">
+                            <p class="card-label">Produk Terjual</p>
+                            <h3 id="total-sold">Memuat...</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Products Section -->
+            <section id="section-top-products" class="section">
+                <h2>🏆 Produk Terlaris</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Produk</th>
+                                <th>Varian</th>
+                                <th>Qty Terjual</th>
+                                <th>Total Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-products-body">
+                            <tr><td colspan="5" class="loading">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Profit Section -->
+            <section id="section-profit" class="section">
+                <h2>💰 Laporan Keuntungan</h2>
+                <div class="cards">
+                    <div class="card card-revenue">
+                        <div class="card-icon">📈</div>
+                        <div class="card-info">
+                            <p class="card-label">Total Revenue</p>
+                            <h3 id="profit-revenue">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-unpaid">
+                        <div class="card-icon">📉</div>
+                        <div class="card-info">
+                            <p class="card-label">Total Cost (Modal)</p>
+                            <h3 id="profit-cost">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-lunas">
+                        <div class="card-icon">💎</div>
+                        <div class="card-info">
+                            <p class="card-label">Keuntungan Bersih</p>
+                            <h3 id="profit-net">Memuat...</h3>
+                        </div>
+                    </div>
+                    <div class="card card-sold">
+                        <div class="card-icon">📊</div>
+                        <div class="card-info">
+                            <p class="card-label">Margin</p>
+                            <h3 id="profit-margin">Memuat...</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Trend Section -->
+            <section id="section-trend" class="section">
+                <h2>📈 Tren Penjualan Harian</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Jumlah Transaksi</th>
+                                <th>Total Pendapatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trend-body">
+                            <tr><td colspan="3" class="loading">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

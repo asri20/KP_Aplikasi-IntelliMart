@@ -12,16 +12,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Koneksi ke PostgreSQL
+// Serve frontend statis dari folder 'public'
+app.use(express.static('public'));
+
+// Koneksi ke MySQL Remote
 connectDB();
 
-// Menghubungkan Route API
+// API Routes
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Pengecekan server dasar
-app.get('/', (req, res) => {
-  res.send('IntelliMart Dashboard & Analytics API is running 🚀');
+// Health check
+app.get('/api', (req, res) => {
+  res.json({ message: 'IntelliMart Dashboard & Analytics API is running 🚀' });
 });
 
 // Mulai Server
@@ -29,5 +32,6 @@ const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`\n======================================================`);
   console.log(`🚀 Dashboard API Server berjalan di http://localhost:${PORT}`);
+  console.log(`📊 Frontend Dashboard: http://localhost:${PORT}`);
   console.log(`======================================================\n`);
 });
