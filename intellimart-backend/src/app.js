@@ -12,6 +12,10 @@ const unitRoutes     = require('./routes/unitRoutes');
 const productRoutes  = require('./routes/productRoutes');
 const variantRoutes  = require('./routes/variantRoutes');
 const stockRoutes    = require('./routes/stockRoutes');
+const priceCodeRoutes = require('./routes/priceCodeRoutes');
+const tierPriceRoutes = require('./routes/tierPriceRoutes');
+const stockMovementRoutes = require('./routes/stockMovementRoutes');
+const unitConversionRoutes = require('./routes/unitConversionRoutes');
 
 const app = express();
 
@@ -75,6 +79,10 @@ app.use('/api/units',      unitRoutes);
 app.use('/api/products',   productRoutes);
 app.use('/api/variants',   variantRoutes);
 app.use('/api/stocks',     stockRoutes);
+app.use('/api/price-codes', priceCodeRoutes);
+app.use('/api/tier-prices', tierPriceRoutes);
+app.use('/api/stock-movements', stockMovementRoutes);
+app.use('/api/unit-conversions', unitConversionRoutes);
 
 // =============================================
 // ERROR HANDLING MIDDLEWARE
@@ -94,35 +102,47 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
   console.error('❌ Unhandled Error:', err);
 
-  // Cek apakah ini error dari PostgreSQL
+  // Cek apakah ini error dari MySQL/MariaDB
   if (err.code) {
-    // Unique constraint violation
-    if (err.code === '23505') {
+    // Unique constraint violation (misal: sku/email/po_number sudah ada)
+    if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
         success: false,
         message: 'Data sudah ada (duplikat). Periksa kembali data yang dimasukkan.',
         error: 'DUPLICATE_ENTRY',
-        detail: err.detail,
+        detail: err.sqlMessage,
       });
     }
 
-    // Foreign key violation
-    if (err.code === '23503') {
+    // Insert/update menunjuk ke data induk yang tidak ada
+    // (misal: kasih price_code_id yang belum terdaftar di tm_price_code)
+    if (err.code === 'ER_NO_REFERENCED_ROW_2' || err.code === 'ER_NO_REFERENCED_ROW') {
       return res.status(400).json({
         success: false,
         message: 'Data referensi tidak ditemukan (foreign key violation).',
         error: 'FOREIGN_KEY_VIOLATION',
-        detail: err.detail,
+        detail: err.sqlMessage,
       });
     }
 
-    // Not null violation
-    if (err.code === '23502') {
+    // Coba hapus/ubah data induk yang masih dipakai data lain
+    // (misal: hapus tm_price_code yang masih dipakai tr_product_stock -> diblokir RESTRICT)
+    if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.code === 'ER_ROW_IS_REFERENCED') {
+      return res.status(409).json({
+        success: false,
+        message: 'Data ini masih dipakai di tempat lain, tidak bisa dihapus/diubah.',
+        error: 'ROW_IS_REFERENCED',
+        detail: err.sqlMessage,
+      });
+    }
+
+    // Field wajib (NOT NULL) tidak diisi
+    if (err.code === 'ER_BAD_NULL_ERROR') {
       return res.status(400).json({
         success: false,
         message: 'Field wajib tidak boleh kosong.',
         error: 'NOT_NULL_VIOLATION',
-        detail: err.detail,
+        detail: err.sqlMessage,
       });
     }
   }

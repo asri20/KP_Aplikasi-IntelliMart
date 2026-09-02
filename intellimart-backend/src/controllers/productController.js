@@ -1,25 +1,11 @@
-// src/controllers/productController.js
-// Controller untuk modul Produk
-
 const ProductModel = require('../models/productModel');
 const CategoryModel = require('../models/categoryModel');
 const BrandModel = require('../models/brandModel');
 const UnitModel = require('../models/unitModel');
 
 const ProductController = {
-
-  /**
-   * GET /api/products
-   * Mendukung:
-   * - Search
-   * - Filter Category
-   * - Filter Brand
-   * - Pagination
-   * - Sorting
-   */
   getAll: async (req, res) => {
     try {
-
       const {
         search,
         category,
@@ -43,42 +29,28 @@ const ProductController = {
       return res.status(200).json({
         success: true,
         message: 'Data produk berhasil diambil',
-
         page: parseInt(page),
         limit: parseInt(limit),
-
         count: data.length,
-
         search: search || null,
         category: category || null,
         brand: brand || null,
-
         sort,
         order,
-
         data,
       });
-
     } catch (error) {
-
       console.error('ProductController.getAll error:', error);
-
       return res.status(500).json({
         success: false,
         message: 'Gagal mengambil data produk',
         error: error.message,
       });
-
     }
   },
 
-  /**
-   * GET /api/products/:id
-   * Ambil produk beserta semua variannya
-   */
   getById: async (req, res) => {
     try {
-
       const { id } = req.params;
 
       if (isNaN(id)) {
@@ -102,26 +74,18 @@ const ProductController = {
         message: 'Data produk berhasil diambil',
         data
       });
-
     } catch (error) {
-
       console.error('ProductController.getById error:', error);
-
       return res.status(500).json({
         success: false,
         message: 'Gagal mengambil data produk',
         error: error.message
       });
-
     }
   },
 
-  /**
-   * POST /api/products
-   */
   create: async (req, res) => {
     try {
-
       const {
         product_name,
         description,
@@ -140,7 +104,6 @@ const ProductController = {
 
       if (category_id) {
         const category = await CategoryModel.findById(category_id);
-
         if (!category) {
           return res.status(404).json({
             success: false,
@@ -151,7 +114,6 @@ const ProductController = {
 
       if (brand_id) {
         const brand = await BrandModel.findById(brand_id);
-
         if (!brand) {
           return res.status(404).json({
             success: false,
@@ -162,7 +124,6 @@ const ProductController = {
 
       if (unit_id) {
         const unit = await UnitModel.findById(unit_id);
-
         if (!unit) {
           return res.status(404).json({
             success: false,
@@ -185,28 +146,19 @@ const ProductController = {
         message: 'Produk berhasil dibuat',
         data
       });
-
     } catch (error) {
-
       console.error('ProductController.create error:', error);
-
       return res.status(500).json({
         success: false,
         message: 'Gagal membuat produk',
         error: error.message
       });
-
     }
   },
 
-  /**
-   * PUT /api/products/:id
-   */
   update: async (req, res) => {
     try {
-
       const { id } = req.params;
-
       const {
         product_name,
         description,
@@ -231,7 +183,6 @@ const ProductController = {
       }
 
       const existing = await ProductModel.findById(id);
-
       if (!existing) {
         return res.status(404).json({
           success: false,
@@ -241,7 +192,6 @@ const ProductController = {
 
       if (category_id) {
         const category = await CategoryModel.findById(category_id);
-
         if (!category) {
           return res.status(404).json({
             success: false,
@@ -252,7 +202,6 @@ const ProductController = {
 
       if (brand_id) {
         const brand = await BrandModel.findById(brand_id);
-
         if (!brand) {
           return res.status(404).json({
             success: false,
@@ -263,7 +212,6 @@ const ProductController = {
 
       if (unit_id) {
         const unit = await UnitModel.findById(unit_id);
-
         if (!unit) {
           return res.status(404).json({
             success: false,
@@ -286,26 +234,18 @@ const ProductController = {
         message: 'Produk berhasil diperbarui',
         data
       });
-
     } catch (error) {
-
       console.error('ProductController.update error:', error);
-
       return res.status(500).json({
         success: false,
         message: 'Gagal memperbarui produk',
         error: error.message
       });
-
     }
   },
 
-  /**
-   * DELETE /api/products/:id
-   */
   delete: async (req, res) => {
     try {
-
       const { id } = req.params;
 
       if (isNaN(id)) {
@@ -329,9 +269,7 @@ const ProductController = {
         message: 'Produk berhasil dihapus',
         data
       });
-
     } catch (error) {
-
       console.error('ProductController.delete error:', error);
 
       if (
@@ -350,10 +288,8 @@ const ProductController = {
         message: 'Gagal menghapus produk',
         error: error.message
       });
-
     }
   }
-
 };
 
 module.exports = ProductController;

@@ -1,221 +1,71 @@
-// src/models/stockMovementModel.js
+const pool = require('../config/db');
 
-const db = require('../config/db');
+async function findAll(store_id, variant_id) {
+  const conditions = [];
+  const params = [];
 
-const StockMovementModel = {
-
-  /**
-   * Ambil seluruh histori pergerakan stok
-   */
-  findAll: async () => {
-    const sql = `
-      SELECT
-        sm.movement_id,
-        sm.store_id,
-        t.store_name,
-        sm.variant_id,
-        v.variant_name,
-        sm.movement_type,
-        sm.quantity,
-        sm.reference_type,
-        sm.reference_id,
-        sm.notes,
-        sm.created_by,
-        sm.created_at
-      FROM tt_stock_movements sm
-      INNER JOIN tm_toko t
-        ON sm.store_id = t.store_id
-      INNER JOIN tm_product_variants v
-        ON sm.variant_id = v.variant_id
-      ORDER BY sm.created_at DESC
-    `;
-
-    const result = await db.query(sql);
-    return result.rows;
-  },
-
-  /**
-   * Ambil histori berdasarkan ID
-   */
-  findById: async (movement_id) => {
-
-    const sql = `
-      SELECT
-        sm.movement_id,
-        sm.store_id,
-        t.store_name,
-        sm.variant_id,
-        v.variant_name,
-        sm.movement_type,
-        sm.quantity,
-        sm.reference_type,
-        sm.reference_id,
-        sm.notes,
-        sm.created_by,
-        sm.created_at
-      FROM tt_stock_movements sm
-      INNER JOIN tm_toko t
-        ON sm.store_id = t.store_id
-      INNER JOIN tm_product_variants v
-        ON sm.variant_id = v.variant_id
-      WHERE sm.movement_id = $1
-    `;
-
-    const result = await db.query(sql, [movement_id]);
-
-    return result.rows[0] || null;
-  },
-
-  /**
-   * Histori berdasarkan varian
-   */
-  findByVariant: async (variant_id) => {
-
-    const sql = `
-      SELECT
-        sm.movement_id,
-        sm.store_id,
-        t.store_name,
-        sm.variant_id,
-        v.variant_name,
-        sm.movement_type,
-        sm.quantity,
-        sm.reference_type,
-        sm.reference_id,
-        sm.notes,
-        sm.created_by,
-        sm.created_at
-      FROM tt_stock_movements sm
-      INNER JOIN tm_toko t
-        ON sm.store_id = t.store_id
-      INNER JOIN tm_product_variants v
-        ON sm.variant_id = v.variant_id
-      WHERE sm.variant_id = $1
-      ORDER BY sm.created_at DESC
-    `;
-
-    const result = await db.query(sql, [variant_id]);
-
-    return result.rows;
-  },
-
-  /**
-   * Histori berdasarkan toko
-   */
-  findByStore: async (store_id) => {
-
-    const sql = `
-      SELECT
-        sm.movement_id,
-        sm.store_id,
-        t.store_name,
-        sm.variant_id,
-        v.variant_name,
-        sm.movement_type,
-        sm.quantity,
-        sm.reference_type,
-        sm.reference_id,
-        sm.notes,
-        sm.created_by,
-        sm.created_at
-      FROM tt_stock_movements sm
-      INNER JOIN tm_toko t
-        ON sm.store_id = t.store_id
-      INNER JOIN tm_product_variants v
-        ON sm.variant_id = v.variant_id
-      WHERE sm.store_id = $1
-      ORDER BY sm.created_at DESC
-    `;
-
-    const result = await db.query(sql, [store_id]);
-
-    return result.rows;
-  },
-
-  /**
-   * Histori berdasarkan toko + varian
-   */
-  findByStoreVariant: async (store_id, variant_id) => {
-
-    const sql = `
-      SELECT
-        sm.movement_id,
-        sm.store_id,
-        t.store_name,
-        sm.variant_id,
-        v.variant_name,
-        sm.movement_type,
-        sm.quantity,
-        sm.reference_type,
-        sm.reference_id,
-        sm.notes,
-        sm.created_by,
-        sm.created_at
-      FROM tt_stock_movements sm
-      INNER JOIN tm_toko t
-        ON sm.store_id = t.store_id
-      INNER JOIN tm_product_variants v
-        ON sm.variant_id = v.variant_id
-      WHERE sm.store_id = $1
-        AND sm.variant_id = $2
-      ORDER BY sm.created_at DESC
-    `;
-
-    const result = await db.query(sql, [store_id, variant_id]);
-
-    return result.rows;
-  },
-
-  /**
-   * Simpan histori movement
-   * Menggunakan transaction (client)
-   */
-  createMovement: async (client, {
-    store_id,
-    variant_id,
-    movement_type,
-    quantity,
-    reference_type,
-    reference_id,
-    notes,
-    created_by
-  }) => {
-
-    const sql = `
-      INSERT INTO tt_stock_movements
-      (
-        store_id,
-        variant_id,
-        movement_type,
-        quantity,
-        reference_type,
-        reference_id,
-        notes,
-        created_by
-      )
-      VALUES
-      (
-        $1,$2,$3,$4,$5,$6,$7,$8
-      )
-      RETURNING *
-    `;
-
-    const values = [
-      store_id,
-      variant_id,
-      movement_type,
-      quantity,
-      reference_type || null,
-      reference_id || null,
-      notes || null,
-      created_by || null
-    ];
-
-    const result = await client.query(sql, values);
-
-    return result.rows[0];
+  if (store_id) {
+    conditions.push('m.store_id = ?');
+    params.push(store_id);
+  }
+  if (variant_id) {
+    conditions.push('m.variant_id = ?');
+    params.push(variant_id);
   }
 
-};
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-module.exports = StockMovementModel;
+  const [rows] = await pool.query(
+    `SELECT m.*, s.store_name, v.variant_name, v.sku, u.name AS created_by_name
+     FROM tt_stock_movement m
+     JOIN tm_store s ON s.id = m.store_id
+     JOIN ms_product_variant v ON v.id = m.variant_id
+     JOIN tm_users u ON u.id = m.created_by
+     ${whereClause}
+     ORDER BY m.created_at DESC
+     LIMIT 100`,
+    params
+  );
+  return rows;
+}
+
+async function findById(id) {
+  const [rows] = await pool.query(
+    `SELECT m.*, s.store_name, v.variant_name, v.sku, u.name AS created_by_name
+     FROM tt_stock_movement m
+     JOIN tm_store s ON s.id = m.store_id
+     JOIN ms_product_variant v ON v.id = m.variant_id
+     JOIN tm_users u ON u.id = m.created_by
+     WHERE m.id = ?`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Ambil stok saat ini untuk kombinasi store+variant (dipakai utk validasi stok cukup/tidak
+ * sebelum OUT/ADJUSTMENT_OUT). Return null kalau baris tr_product_stock belum ada sama sekali.
+ */
+async function getCurrentStock(store_id, variant_id) {
+  const [rows] = await pool.query(
+    'SELECT stock FROM tr_product_stock WHERE store_id = ? AND variant_id = ?',
+    [store_id, variant_id]
+  );
+  return rows[0] ? rows[0].stock : null;
+}
+
+/**
+ * INSERT ke tt_stock_movement -> trigger trg_stock_movement_after_insert di database
+ * OTOMATIS menyesuaikan tr_product_stock.stock. Tidak perlu UPDATE manual di sini.
+ */
+async function create({ store_id, variant_id, movement_type, qty, reference_type, reference_id, supplier_id, note, created_by }) {
+  const [result] = await pool.query(
+    `INSERT INTO tt_stock_movement
+       (store_id, variant_id, movement_type, qty, reference_type, reference_id, supplier_id, note, created_by)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [store_id, variant_id, movement_type, qty, reference_type, reference_id || null, supplier_id || null, note || null, created_by]
+  );
+  return findById(result.insertId);
+}
+
+module.exports = { findAll, findById, getCurrentStock, create };
