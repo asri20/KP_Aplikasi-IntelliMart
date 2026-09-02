@@ -1,5 +1,27 @@
 const TransactionModel = require("../models/transactionModel");
 
+// Get detail transaksi per ID (untuk Cetak Struk / Invoice)
+exports.getTransactionDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const transaction = await TransactionModel.getById(id);
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: "Transaksi tidak ditemukan",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: transaction,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.getAllTransactions = async (req, res) => {
   try {
     const data = await TransactionModel.getAll();
@@ -17,8 +39,8 @@ exports.createCheckout = async (req, res) => {
       store_id,
       sale_type,
       items,
-      discount_type, // 'PERCENT' atau 'NOMINAL'
-      discount_value, // nominal rupiah atau angka persentase
+      discount_type,
+      discount_value,
       status,
     } = req.body;
 
@@ -32,7 +54,7 @@ exports.createCheckout = async (req, res) => {
     let subtotalPrice = 0;
     const processedItems = [];
 
-    // 1. Hitung Bulk Pricing per item & total kotor
+    // 1. Cek Bulk Pricing per item & total kotor
     for (let item of items) {
       const variantId = item.product_id;
       const priceCodeId = item.price_code_id || item.product_id;
@@ -63,14 +85,13 @@ exports.createCheckout = async (req, res) => {
       }
     }
 
-    // Batasi nilai diskon agar tidak melampaui subtotal
     if (calculatedDiscount > subtotalPrice) {
       calculatedDiscount = subtotalPrice;
     }
 
     const finalTotalPrice = subtotalPrice - calculatedDiscount;
 
-    // 3. Simpan Header Transaksi dengan total harga bersih
+    // 3. Simpan Header Transaksi
     const transactionId = await TransactionModel.create({
       customer_id,
       cashier_id,
