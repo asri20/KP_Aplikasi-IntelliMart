@@ -1,61 +1,180 @@
-import { useState } from "react";
+// src/pages/Products.jsx
 
-const MOCK_PRODUCTS = [
-  { id: 1, name: "Indomie Goreng", sku: "IND-GRG-500", stock: 150, price: "Rp 3.500", category: "Mie Instan", status: "active" },
-  { id: 2, name: "Aqua 600ml", sku: "AQU-600ML", stock: 8, price: "Rp 4.000", category: "Minuman", status: "low" },
-  { id: 3, name: "Beras Premium 5kg", sku: "BRS-PRE-5K", stock: 45, price: "Rp 72.000", category: "Bahan Pokok", status: "active" },
-  { id: 4, name: "Minyak Goreng 2L", sku: "MYK-GRG-2L", stock: 3, price: "Rp 35.000", category: "Bahan Pokok", status: "low" },
-  { id: 5, name: "Sabun Lifebuoy", sku: "SAB-LFB-90", stock: 60, price: "Rp 8.000", category: "Perawatan", status: "active" },
-];
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Select from '../components/ui/Select';
+import Table from '../components/ui/Table';
+import Modal from '../components/ui/Modal';
+import Badge from '../components/ui/Badge';
+
+import productService from '../services/productService';
+import { useFetch } from '../hooks/useFetch';
+import { debounce, getErrorMessage } from '../utils/helpers';
+
+import './Products.css';
+
+const emptyForm = {
+  product_name: '',
+  description: '',
+  category_id: '',
+  brand_id: '',
+  unit_id: '',
+  is_active: true,
+};
 
 export default function Products() {
-  const [search, setSearch] = useState("");
-  const filtered = MOCK_PRODUCTS.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+
+  const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const { data: products, loading, error, refetch } = useFetch(
+    () => productService.getAll({ search }),
+    [search]
   );
 
+  const handleSearchChange = debounce((value) => setSearch(value), 400);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setFormError('');
+    setModalOpen(true);
+  };
+
+  const openEdit = (product) => {
+    setEditing(product);
+    setForm({
+      product_name: product.product_name || '',
+      description: product.description || '',
+      category_id: product.category_id || '',
+      brand_id: product.brand_id || '',
+      unit_id: product.unit_id || '',
+      is_active: product.is_active,
+    });
+    setFormError('');
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setFormError('');
+
+    try {
+      if (editing) {
+        await productService.update(editing.product_id, form);
+      } else {
+        await productService.create(form);
+      }
+      setModalOpen(false);
+      refetch();
+    } catch (err) {
+      setFormError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (product) => {
+    if (!confirm(`Hapus produk "${product.product_name}"?`)) return;
+
+    try {
+      await productService.delete(product.product_id);
+      refetch();
+    } catch (err) {
+      alert(getErrorMessage(err, 'Produk tidak dapat dihapus karena masih dipakai varian.'));
+    }
+  };
+
+  const columns = [
+    { key: 'product_name', header: 'Nama Produk' },
+    { key: 'category_name', header: 'Kategori' },
+    { key: 'brand_name', header: 'Brand' },
+    {
+      key: 'is_active',
+      header: 'Status',
+      render: (row) => (
+        <Badge tone={row.is_active ? 'success' : 'neutral'}>
+          {row.is_active ? 'Aktif' : 'Nonaktif'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      align: 'right',
+      render: (row) => (
+        <div className="row-actions">
+          <Button variant="ghost" size="sm" icon={Pencil} onClick={() => openEdit(row)}>
+            Edit
+          </Button>
+          <Button variant="ghost" size="sm" icon={Trash2} onClick={() => handleDelete(row)}>
+            Hapus
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="page-content">
-      <div className="page-header">
-        <h2 className="page-title">Produk & Stok</h2>
-        <button className="btn-primary">+ Tambah Produk</button>
+    <div className="page">
+      <div className="page__header">
+        <div>
+          <h1 className="page__title">Produk</h1>
+          <p className="page__subtitle">Kelola master produk. Harga & stok diatur per toko di menu terkait.</p>
+        </div>
+        <Button icon={Plus} onClick={openCreate}>Tambah Produk</Button>
       </div>
-      <div className="search-bar">
-        <input
-          className="search-input"
-          placeholder="Cari produk..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+
+      <div className="page__toolbar">
+        <div className="search-box">
+          <Search size={16} />
+          <input
+            placeholder="Cari nama produk..."
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+        </div>
       </div>
-      <div className="table-card">
-        <table className="dash-table">
-          <thead>
-            <tr><th>Produk</th><th>SKU</th><th>Kategori</th><th>Stok</th><th>Harga</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            {filtered.map((p) => (
-              <tr key={p.id}>
-                <td><strong>{p.name}</strong></td>
-                <td className="trx-id">{p.sku}</td>
-                <td>{p.category}</td>
-                <td>
-                  <span style={{ color: p.status === "low" ? "#ef4444" : "#22c55e", fontWeight: 600 }}>
-                    {p.stock}
-                  </span>
-                  {p.status === "low" && <span style={{ marginLeft: 6, fontSize: 12 }}>⚠️</span>}
-                </td>
-                <td>{p.price}</td>
-                <td>
-                  <span className={`badge badge--${p.status === "active" ? "paid" : "pending"}`}>
-                    {p.status === "active" ? "Normal" : "Stok Rendah"}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {error && <div className="page__error">{error}</div>}
+
+      <Table columns={columns} data={products} loading={loading} emptyMessage="Belum ada produk. Tambahkan produk pertama kamu." />
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Edit Produk' : 'Tambah Produk'}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setModalOpen(false)}>Batal</Button>
+            <Button onClick={handleSubmit} loading={saving}>
+              {editing ? 'Simpan Perubahan' : 'Tambah Produk'}
+            </Button>
+          </>
+        }
+      >
+        <form className="form-grid" onSubmit={handleSubmit}>
+          <Input
+            label="Nama Produk"
+            required
+            value={form.product_name}
+            onChange={(e) => setForm({ ...form, product_name: e.target.value })}
+          />
+          <Input
+            label="Deskripsi"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+          {formError && <div className="form-error">{formError}</div>}
+        </form>
+      </Modal>
     </div>
   );
 }

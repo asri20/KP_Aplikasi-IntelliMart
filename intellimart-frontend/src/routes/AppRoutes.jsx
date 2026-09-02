@@ -5,6 +5,9 @@ import Login from "../pages/Login";
 import SelectStore from "../pages/SelectStore";
 import Dashboard from "../pages/Dashboard";
 import Products from "../pages/Products";
+import Variants from "../pages/Variants";
+import Stock from "../pages/Stock";
+import StorePrices from "../pages/StorePrices";
 import POS from "../pages/POS";
 import Customers from "../pages/Customers";
 import Suppliers from "../pages/Suppliers";
@@ -28,6 +31,9 @@ export default function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="pos" element={<POS />} />
         <Route path="products" element={<Products />} />
+        <Route path="variants" element={<Variants />} />
+        <Route path="stock" element={<Stock />} />
+        <Route path="store-prices" element={<StorePrices />} />
         <Route path="customers" element={<Customers />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="finance" element={<Finance />} />
