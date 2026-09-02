@@ -16,6 +16,8 @@ const priceCodeRoutes = require('./routes/priceCodeRoutes');
 const tierPriceRoutes = require('./routes/tierPriceRoutes');
 const stockMovementRoutes = require('./routes/stockMovementRoutes');
 const unitConversionRoutes = require('./routes/unitConversionRoutes');
+const productImageRoutes = require('./routes/productImageRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 
@@ -83,6 +85,8 @@ app.use('/api/price-codes', priceCodeRoutes);
 app.use('/api/tier-prices', tierPriceRoutes);
 app.use('/api/stock-movements', stockMovementRoutes);
 app.use('/api/unit-conversions', unitConversionRoutes);
+app.use('/api/product-images', productImageRoutes);
+app.use('/api/reports', reportRoutes);
 
 // =============================================
 // ERROR HANDLING MIDDLEWARE
