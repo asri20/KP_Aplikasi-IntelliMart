@@ -11,8 +11,16 @@ exports.getAllTransactions = async (req, res) => {
 
 exports.createCheckout = async (req, res) => {
   try {
-    const { customer_id, cashier_id, store_id, sale_type, items, status } =
-      req.body;
+    const {
+      customer_id,
+      cashier_id,
+      store_id,
+      sale_type,
+      items,
+      discount_type, // 'PERCENT' atau 'NOMINAL'
+      discount_value, // nominal rupiah atau angka persentase
+      status,
+    } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({
@@ -21,24 +29,21 @@ exports.createCheckout = async (req, res) => {
       });
     }
 
-    let calculatedTotalPrice = 0;
+    let subtotalPrice = 0;
     const processedItems = [];
 
-    // 1. Cek Bulk Pricing (Harga Bertingkat) per item dari tr_tier_price
+    // 1. Hitung Bulk Pricing per item & total kotor
     for (let item of items) {
       const variantId = item.product_id;
       const priceCodeId = item.price_code_id || item.product_id;
       const qty = item.qty;
 
-      // Ambil harga grosir/tier dari database jika kuantitas memenuhi syarat
       const tierPrice = await TransactionModel.getTierPrice(priceCodeId, qty);
-
-      // Gunakan tierPrice jika ada, jika tidak gunakan harga normal (item.price)
       const finalUnitPrice =
         tierPrice !== null ? parseFloat(tierPrice) : parseFloat(item.price);
       const subtotal = qty * finalUnitPrice;
 
-      calculatedTotalPrice += subtotal;
+      subtotalPrice += subtotal;
 
       processedItems.push({
         variant_id: variantId,
@@ -48,17 +53,34 @@ exports.createCheckout = async (req, res) => {
       });
     }
 
-    // 2. Simpan Header Transaksi dengan total harga terhitung
+    // 2. Kalkulasi Nilai Diskon
+    let calculatedDiscount = 0;
+    if (discount_value && discount_value > 0) {
+      if (discount_type === "PERCENT") {
+        calculatedDiscount = (subtotalPrice * parseFloat(discount_value)) / 100;
+      } else {
+        calculatedDiscount = parseFloat(discount_value);
+      }
+    }
+
+    // Batasi nilai diskon agar tidak melampaui subtotal
+    if (calculatedDiscount > subtotalPrice) {
+      calculatedDiscount = subtotalPrice;
+    }
+
+    const finalTotalPrice = subtotalPrice - calculatedDiscount;
+
+    // 3. Simpan Header Transaksi dengan total harga bersih
     const transactionId = await TransactionModel.create({
       customer_id,
       cashier_id,
       store_id,
       sale_type: sale_type || "RETAIL",
-      total_price: calculatedTotalPrice,
+      total_price: finalTotalPrice,
       status: status || "PAID",
     });
 
-    // 3. Simpan Detail Transaksi dan Catat Pergerakan Stok
+    // 4. Simpan Detail Transaksi dan Catat Pergerakan Stok
     for (let item of processedItems) {
       await TransactionModel.createDetail({
         transaction_id: transactionId,
@@ -79,9 +101,11 @@ exports.createCheckout = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Transaksi penjualan dengan harga bertingkat berhasil disimpan!",
+      message: "Transaksi penjualan dengan diskon berhasil disimpan!",
       transaction_id: transactionId,
-      total_price: calculatedTotalPrice,
+      subtotal: subtotalPrice,
+      discount_amount: calculatedDiscount,
+      total_price: finalTotalPrice,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
