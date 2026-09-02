@@ -1,0 +1,91 @@
+/* src/styles/tokens.css
+   Design tokens untuk IntelliMart — Module Produk, Varian, Stok & Harga
+   Tema: warehouse/retail gelap dengan aksen emas (price-tag motif)
+*/
+
+:root {
+  /* Warna dasar */
+  --color-bg: #14181c;
+  --color-bg-elevated: #1a1f25;
+  --color-panel: #1c2128;
+  --color-panel-hover: #232a32;
+  --color-border: #2b323b;
+  --color-border-strong: #3a4350;
+
+  /* Teks */
+  --color-text: #e8e6e1;
+  --color-text-muted: #9aa3ad;
+  --color-text-faint: #6b7480;
+
+  /* Aksen */
+  --color-primary: #d4a24c;
+  --color-primary-hover: #e0b25f;
+  --color-primary-text: #1a1509;
+
+  --color-success: #4caf7d;
+  --color-success-bg: rgba(76, 175, 125, 0.14);
+  --color-warning: #e8a33d;
+  --color-warning-bg: rgba(232, 163, 61, 0.14);
+  --color-danger: #e5484d;
+  --color-danger-bg: rgba(229, 72, 77, 0.14);
+  --color-info: #5b9dd9;
+  --color-info-bg: rgba(91, 157, 217, 0.14);
+
+  /* Tipografi */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+
+  /* Radius & spacing */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Angka (harga, qty) selalu tabular supaya kolom rapi sejajar */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Fokus keyboard selalu terlihat (aksesibilitas) */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Hormati preferensi reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar tipis, konsisten dengan tema gelap */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
