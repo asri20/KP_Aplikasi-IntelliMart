@@ -1,41 +1,17 @@
-// src/routes/stockRoutes.js
-
-const express = require("express");
+const express = require('express');
 const router = express.Router();
+const ProductStockController = require('../controllers/productStockController');
 
-const StockController = require("../controllers/stockController");
+// GET    /api/stocks                              - Ambil semua (opsional: ?store_id=1 dan/atau ?variant_id=1)
+// GET    /api/stocks/:store_id/:variant_id         - Ambil satu kombinasi toko+varian
+// POST   /api/stocks                               - Buat harga/pengaturan awal (stock selalu mulai 0)
+// PUT    /api/stocks/:store_id/:variant_id         - Update harga/pengaturan (TIDAK bisa ubah stock)
+// DELETE /api/stocks/:store_id/:variant_id         - Hapus data harga/stok kombinasi ini
 
-/**
- * =====================================================
- * STOCK IN / OUT
- * =====================================================
- */
-router.post("/in", StockController.stockIn);
-
-router.post("/out", StockController.stockOut);
-
-
-/**
- * =====================================================
- * STOCK BALANCE
- * =====================================================
- */
-router.get("/", StockController.getAllStock);
-
-
-/**
- * =====================================================
- * STOCK HISTORY
- * =====================================================
- */
-router.get("/history", StockController.getMovementHistory);
-
-
-/**
- * =====================================================
- * LOW STOCK
- * =====================================================
- */
-router.get("/low-stock", StockController.getLowStock);
+router.get('/',    ProductStockController.getAll);
+router.get('/:store_id/:variant_id', ProductStockController.getOne);
+router.post('/',   ProductStockController.create);
+router.put('/:store_id/:variant_id', ProductStockController.update);
+router.delete('/:store_id/:variant_id', ProductStockController.delete);
 
 module.exports = router;

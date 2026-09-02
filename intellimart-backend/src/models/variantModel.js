@@ -1,237 +1,63 @@
-// src/models/variantModel.js
-// Model untuk tabel tm_product_variants
+const pool = require('../config/db');
 
-const db = require('../config/db');
+async function findAll(product_id) {
+  const conditions = [];
+  const params = [];
 
-const VariantModel = {
-
-  /**
-   * Ambil semua varian beserta nama produk
-   */
-  findAll: async () => {
-
-    const sql = `
-      SELECT
-        v.variant_id,
-        v.product_id,
-        p.product_name,
-        v.sku,
-        v.barcode,
-        v.variant_name,
-        v.cost_price,
-        v.selling_price,
-        v.weight,
-        v.is_active,
-        v.created_at,
-        v.updated_at
-      FROM tm_product_variants v
-      LEFT JOIN tm_products p
-        ON p.product_id = v.product_id
-      ORDER BY v.variant_id ASC
-    `;
-
-    const result = await db.query(sql);
-    return result.rows;
-
-  },
-
-  /**
-   * Ambil berdasarkan ID
-   */
-  findById: async (id) => {
-
-    const sql = `
-      SELECT
-        v.variant_id,
-        v.product_id,
-        p.product_name,
-        v.sku,
-        v.barcode,
-        v.variant_name,
-        v.cost_price,
-        v.selling_price,
-        v.weight,
-        v.is_active,
-        v.created_at,
-        v.updated_at
-      FROM tm_product_variants v
-      LEFT JOIN tm_products p
-        ON p.product_id = v.product_id
-      WHERE v.variant_id = $1
-    `;
-
-    const result = await db.query(sql, [id]);
-
-    return result.rows[0] || null;
-
-  },
-
-  /**
-   * Cek SKU
-   */
-  findBySku: async (sku, excludeId = null) => {
-
-    let sql = `
-      SELECT variant_id
-      FROM tm_product_variants
-      WHERE LOWER(sku) = LOWER($1)
-    `;
-
-    const values = [sku];
-
-    if (excludeId) {
-      sql += ` AND variant_id <> $2`;
-      values.push(excludeId);
-    }
-
-    const result = await db.query(sql, values);
-
-    return result.rows[0] || null;
-
-  },
-
-  /**
-   * Cek Barcode
-   */
-  findByBarcode: async (barcode, excludeId = null) => {
-
-    let sql = `
-      SELECT variant_id
-      FROM tm_product_variants
-      WHERE barcode = $1
-    `;
-
-    const values = [barcode];
-
-    if (excludeId) {
-      sql += ` AND variant_id <> $2`;
-      values.push(excludeId);
-    }
-
-    const result = await db.query(sql, values);
-
-    return result.rows[0] || null;
-
-  },
-
-  /**
-   * INSERT
-   */
-  create: async ({
-    product_id,
-    sku,
-    barcode,
-    variant_name,
-    cost_price,
-    selling_price,
-    weight,
-    is_active
-  }) => {
-
-    const sql = `
-      INSERT INTO tm_product_variants
-      (
-        product_id,
-        sku,
-        barcode,
-        variant_name,
-        cost_price,
-        selling_price,
-        weight,
-        is_active
-      )
-      VALUES
-      (
-        $1,$2,$3,$4,$5,$6,$7,$8
-      )
-      RETURNING *
-    `;
-
-    const values = [
-      product_id,
-      sku,
-      barcode || null,
-      variant_name,
-      cost_price || 0,
-      selling_price || 0,
-      weight || null,
-      is_active !== undefined ? is_active : true
-    ];
-
-    const result = await db.query(sql, values);
-
-    return result.rows[0];
-
-  },
-
-  /**
-   * UPDATE
-   */
-  update: async (
-    id,
-    {
-      product_id,
-      sku,
-      barcode,
-      variant_name,
-      cost_price,
-      selling_price,
-      weight,
-      is_active
-    }
-  ) => {
-
-    const sql = `
-      UPDATE tm_product_variants
-      SET
-          product_id    = $1,
-          sku           = $2,
-          barcode       = $3,
-          variant_name  = $4,
-          cost_price    = $5,
-          selling_price = $6,
-          weight        = $7,
-          is_active     = $8,
-          updated_at    = NOW()
-      WHERE variant_id = $9
-      RETURNING *
-    `;
-
-    const values = [
-      product_id,
-      sku,
-      barcode || null,
-      variant_name,
-      cost_price || 0,
-      selling_price || 0,
-      weight || null,
-      is_active,
-      id
-    ];
-
-    const result = await db.query(sql, values);
-
-    return result.rows[0] || null;
-
-  },
-
-  /**
-   * DELETE
-   */
-  delete: async (id) => {
-
-    const sql = `
-      DELETE FROM tm_product_variants
-      WHERE variant_id = $1
-      RETURNING *
-    `;
-
-    const result = await db.query(sql, [id]);
-
-    return result.rows[0] || null;
-
+  if (product_id) {
+    conditions.push('v.product_id = ?');
+    params.push(product_id);
   }
 
-};
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-module.exports = VariantModel;
+  const [rows] = await pool.query(
+    `SELECT v.*, p.product_name
+     FROM ms_product_variant v
+     JOIN tm_product p ON p.id = v.product_id
+     ${whereClause}
+     ORDER BY v.id DESC`,
+    params
+  );
+  return rows;
+}
+
+async function findById(id) {
+  const [rows] = await pool.query(
+    `SELECT v.*, p.product_name
+     FROM ms_product_variant v
+     JOIN tm_product p ON p.id = v.product_id
+     WHERE v.id = ?`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function create({ product_id, variant_name, sku, barcode, cost_price, weight, is_active }) {
+  const [result] = await pool.query(
+    `INSERT INTO ms_product_variant (product_id, variant_name, sku, barcode, cost_price, weight, is_active)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [product_id, variant_name, sku, barcode || null, cost_price || 0, weight || null, is_active ?? 1]
+  );
+  return findById(result.insertId);
+}
+
+async function update(id, { variant_name, sku, barcode, cost_price, weight, is_active }) {
+  await pool.query(
+    `UPDATE ms_product_variant
+     SET variant_name = ?, sku = ?, barcode = ?, cost_price = ?, weight = ?, is_active = ?
+     WHERE id = ?`,
+    [variant_name, sku, barcode || null, cost_price || 0, weight || null, is_active ?? 1, id]
+  );
+  return findById(id);
+}
+
+async function deleteVariant(id) {
+  const existing = await findById(id);
+  if (!existing) return null;
+
+  await pool.query('DELETE FROM ms_product_variant WHERE id = ?', [id]);
+  return existing;
+}
+
+module.exports = { findAll, findById, create, update, delete: deleteVariant };

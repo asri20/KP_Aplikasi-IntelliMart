@@ -1,323 +1,100 @@
-// src/models/productModel.js
-// Model untuk tabel tm_products
-
-const db = require('../config/db');
-
-const ProductModel = {
-
-  /**
-   * =====================================================
-   * Ambil semua produk
-   * Mendukung search, filter, pagination
-   * =====================================================
-   */
-  findAll: async (
-    search = '',
-    category = '',
-    brand = '',
-    page = 1,
-    limit = 10,
-    sort = 'product_id',
-    order = 'ASC'
-  ) => {
-
-    let sql = `
-      SELECT
-        p.product_id,
-        p.product_name,
-        p.description,
-        p.category_id,
-        c.category_name,
-        p.brand_id,
-        b.brand_name,
-        p.unit_id,
-        u.unit_name,
-        p.is_active,
-        p.created_at,
-        p.updated_at
-      FROM tm_products p
-      LEFT JOIN tm_categories c
-        ON p.category_id = c.category_id
-      LEFT JOIN tm_brand b
-        ON p.brand_id = b.brand_id
-      LEFT JOIN tm_unit u
-        ON p.unit_id = u.unit_id
-    `;
-
-    const values = [];
-    const conditions = [];
-
-    if (search && search.trim() !== '') {
-      values.push(`%${search}%`);
-      conditions.push(`p.product_name ILIKE $${values.length}`);
-    }
-
-    if (category) {
-      values.push(category);
-      conditions.push(`p.category_id = $${values.length}`);
-    }
-
-    if (brand) {
-      values.push(brand);
-      conditions.push(`p.brand_id = $${values.length}`);
-    }
-
-    if (conditions.length > 0) {
-      sql += ` WHERE ${conditions.join(' AND ')}`;
-    }
-
-    const allowedSort = [
-      'product_id',
-      'product_name',
-      'created_at'
-    ];
-
-    if (!allowedSort.includes(sort)) {
-      sort = 'product_id';
-    }
-
-    order = order.toUpperCase() === 'DESC'
-      ? 'DESC'
-      : 'ASC';
-
-    sql += `
-      ORDER BY p.${sort} ${order}
-    `;
-
-    const offset = (page - 1) * limit;
-
-    values.push(limit);
-    sql += ` LIMIT $${values.length}`;
-
-    values.push(offset);
-    sql += ` OFFSET $${values.length}`;
-
-    const result = await db.query(sql, values);
-
-    return result.rows;
-  },
-
-
-
-  /**
-   * =====================================================
-   * Ambil detail produk + semua varian
-   * =====================================================
-   */
-  findById: async (id) => {
-
-    const productSql = `
-      SELECT
-        p.product_id,
-        p.product_name,
-        p.description,
-        p.category_id,
-        c.category_name,
-        p.brand_id,
-        b.brand_name,
-        p.unit_id,
-        u.unit_name,
-        p.is_active,
-        p.created_at,
-        p.updated_at
-      FROM tm_products p
-      LEFT JOIN tm_categories c
-        ON p.category_id = c.category_id
-      LEFT JOIN tm_brand b
-        ON p.brand_id = b.brand_id
-      LEFT JOIN tm_unit u
-        ON p.unit_id = u.unit_id
-      WHERE p.product_id = $1
-    `;
-
-    const productResult =
-      await db.query(productSql, [id]);
-
-    const product = productResult.rows[0];
-
-    if (!product) {
-      return null;
-    }
-
-    const variantSql = `
-      SELECT
-        variant_id,
-        product_id,
-        sku,
-        barcode,
-        variant_name,
-        cost_price,
-        selling_price,
-        weight,
-        is_active,
-        created_at,
-        updated_at
-      FROM tm_product_variants
-      WHERE product_id = $1
-      ORDER BY variant_id ASC
-    `;
-
-    const variantResult =
-      await db.query(variantSql, [id]);
-
-    product.variants = variantResult.rows;
-
-    return product;
-  },
-
-
-
-  /**
-   * =====================================================
-   * INSERT PRODUCT
-   * =====================================================
-   */
-  create: async ({
-    product_name,
-    description,
-    category_id,
-    brand_id,
-    unit_id,
-    is_active
-  }) => {
-
-    const sql = `
-      INSERT INTO tm_products
-      (
-        product_name,
-        description,
-        category_id,
-        brand_id,
-        unit_id,
-        is_active
-      )
-      VALUES
-      (
-        $1,$2,$3,$4,$5,$6
-      )
-      RETURNING *
-    `;
-
-    const values = [
-
-      product_name,
-
-      description || null,
-
-      category_id || null,
-
-      brand_id || null,
-
-      unit_id || null,
-
-      is_active !== undefined
-        ? is_active
-        : true
-
-    ];
-
-    const result =
-      await db.query(sql, values);
-
-    return result.rows[0];
-  },
-
-
-
-  /**
-   * =====================================================
-   * UPDATE PRODUCT
-   * =====================================================
-   */
-  update: async (
-    id,
-    {
-      product_name,
-      description,
-      category_id,
-      brand_id,
-      unit_id,
-      is_active
-    }
-  ) => {
-
-    const sql = `
-      UPDATE tm_products
-      SET
-          product_name = $1,
-          description = $2,
-          category_id = $3,
-          brand_id = $4,
-          unit_id = $5,
-          is_active = $6,
-          updated_at = NOW()
-      WHERE product_id = $7
-      RETURNING *
-    `;
-
-    const values = [
-
-      product_name,
-
-      description || null,
-
-      category_id || null,
-
-      brand_id || null,
-
-      unit_id || null,
-
-      is_active,
-
-      id
-
-    ];
-
-    const result =
-      await db.query(sql, values);
-
-    return result.rows[0] || null;
-  },
-
-
-
-  /**
-   * =====================================================
-   * DELETE PRODUCT
-   * =====================================================
-   */
-  delete: async (id) => {
-
-    const check =
-      await db.query(
-        `
-        SELECT COUNT(*)
-        FROM tm_product_variants
-        WHERE product_id = $1
-        `,
-        [id]
-      );
-
-    if (Number(check.rows[0].count) > 0) {
-
-      throw new Error(
-        'Produk masih memiliki varian. Hapus seluruh varian terlebih dahulu.'
-      );
-
-    }
-
-    const sql = `
-      DELETE FROM tm_products
-      WHERE product_id = $1
-      RETURNING *
-    `;
-
-    const result =
-      await db.query(sql, [id]);
-
-    return result.rows[0] || null;
-  }
-
+const pool = require('../config/db');
+
+const ALLOWED_SORT = {
+  product_id: 'p.id',
+  product_name: 'p.product_name',
+  created_at: 'p.created_at',
+  updated_at: 'p.updated_at',
 };
 
-module.exports = ProductModel;
+async function findAll(search, category, brand, page = 1, limit = 10, sort = 'product_id', order = 'ASC') {
+  const sortColumn = ALLOWED_SORT[sort] || 'p.id';
+  const sortOrder = String(order).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+  const conditions = [];
+  const params = [];
+
+  if (search) {
+    conditions.push('p.product_name LIKE ?');
+    params.push(`%${search}%`);
+  }
+  if (category) {
+    conditions.push('p.category_id = ?');
+    params.push(category);
+  }
+  if (brand) {
+    conditions.push('p.brand_id = ?');
+    params.push(brand);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const safeLimit = Math.max(1, parseInt(limit) || 10);
+  const safePage = Math.max(1, parseInt(page) || 1);
+  const offset = (safePage - 1) * safeLimit;
+
+  const [rows] = await pool.query(
+    `SELECT p.*, c.category_name, b.brand_name, u.unit_name
+     FROM tm_product p
+     LEFT JOIN tm_category c ON c.id = p.category_id
+     LEFT JOIN tm_brand b ON b.id = p.brand_id
+     LEFT JOIN tm_unit u ON u.id = p.unit_id
+     ${whereClause}
+     ORDER BY ${sortColumn} ${sortOrder}
+     LIMIT ? OFFSET ?`,
+    [...params, safeLimit, offset]
+  );
+  return rows;
+}
+
+async function findById(id) {
+  const [rows] = await pool.query(
+    `SELECT p.*, c.category_name, b.brand_name, u.unit_name
+     FROM tm_product p
+     LEFT JOIN tm_category c ON c.id = p.category_id
+     LEFT JOIN tm_brand b ON b.id = p.brand_id
+     LEFT JOIN tm_unit u ON u.id = p.unit_id
+     WHERE p.id = ?`,
+    [id]
+  );
+  return rows[0] || null;
+}
+
+async function create({ product_name, description, category_id, brand_id, unit_id, is_active }) {
+  const [result] = await pool.query(
+    `INSERT INTO tm_product (product_name, description, category_id, brand_id, unit_id, is_active)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [product_name, description || null, category_id || null, brand_id || null, unit_id || null, is_active ?? 1]
+  );
+  return findById(result.insertId);
+}
+
+async function update(id, { product_name, description, category_id, brand_id, unit_id, is_active }) {
+  await pool.query(
+    `UPDATE tm_product
+     SET product_name = ?, description = ?, category_id = ?, brand_id = ?, unit_id = ?, is_active = ?
+     WHERE id = ?`,
+    [product_name, description || null, category_id || null, brand_id || null, unit_id || null, is_active ?? 1, id]
+  );
+  return findById(id);
+}
+
+async function deleteProduct(id) {
+  const existing = await findById(id);
+  if (!existing) return null;
+
+  const [variants] = await pool.query('SELECT id FROM ms_product_variant WHERE product_id = ? LIMIT 1', [id]);
+  if (variants.length > 0) {
+    throw new Error('Produk ini masih memiliki varian yang terdaftar, hapus variannya terlebih dahulu');
+  }
+
+  await pool.query('DELETE FROM tm_product WHERE id = ?', [id]);
+  return existing;
+}
+
+module.exports = { 
+  findAll, 
+  findById, 
+  create, 
+  update, 
+  delete: deleteProduct 
+};
