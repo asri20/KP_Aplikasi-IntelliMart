@@ -17,6 +17,9 @@ const tierPriceRoutes = require("./routes/tierPriceRoutes");
 const stockMovementRoutes = require("./routes/stockMovementRoutes");
 const unitConversionRoutes = require("./routes/unitConversionRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
+const storeRoutes = require('./routes/storeRoutes');
 
 const app = express();
 
@@ -32,6 +35,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 
 // Parse JSON body
 app.use(express.json());
@@ -87,6 +91,9 @@ app.use("/api/tier-prices", tierPriceRoutes);
 app.use("/api/stock-movements", stockMovementRoutes);
 app.use("/api/unit-conversions", unitConversionRoutes);
 app.use("/api/transactions", transactionRoutes);
+app.use('/api/auth', authRoutes); 
+app.use('/api/users', userRoutes);
+app.use('/api/stores', storeRoutes);
 // =============================================
 // ERROR HANDLING MIDDLEWARE
 // =============================================
