@@ -1,14 +1,15 @@
 Folder PATH listing for volume Windows
-Volume serial number is 00000025 90C9:46F1
+Volume serial number is 90C9-46F1
 C:.
 |   .env
 |   .env.example
 |   .gitignore
+|   API_DOCUMENTATION.md
 |   database.sql
 |   package-lock.json
 |   package.json
 |   README.md
-|   struktur_folder.txt
+|   struktur-proyek.txt
 |   
 +---node_modules
 |   |   .package-lock.json
@@ -27,6 +28,132 @@ C:.
 |   |       semver.cmd
 |   |       semver.ps1
 |   |       
+|   +---@types
+|   |   \---node
+|   |       |   assert.d.ts
+|   |       |   async_hooks.d.ts
+|   |       |   buffer.buffer.d.ts
+|   |       |   buffer.d.ts
+|   |       |   child_process.d.ts
+|   |       |   cluster.d.ts
+|   |       |   console.d.ts
+|   |       |   constants.d.ts
+|   |       |   crypto.d.ts
+|   |       |   dgram.d.ts
+|   |       |   diagnostics_channel.d.ts
+|   |       |   dns.d.ts
+|   |       |   domain.d.ts
+|   |       |   events.d.ts
+|   |       |   ffi.d.ts
+|   |       |   fs.d.ts
+|   |       |   globals.d.ts
+|   |       |   globals.typedarray.d.ts
+|   |       |   http.d.ts
+|   |       |   http2.d.ts
+|   |       |   https.d.ts
+|   |       |   index.d.ts
+|   |       |   inspector.d.ts
+|   |       |   inspector.generated.d.ts
+|   |       |   LICENSE
+|   |       |   module.d.ts
+|   |       |   net.d.ts
+|   |       |   os.d.ts
+|   |       |   package.json
+|   |       |   path.d.ts
+|   |       |   perf_hooks.d.ts
+|   |       |   process.d.ts
+|   |       |   punycode.d.ts
+|   |       |   querystring.d.ts
+|   |       |   quic.d.ts
+|   |       |   readline.d.ts
+|   |       |   README.md
+|   |       |   repl.d.ts
+|   |       |   sea.d.ts
+|   |       |   sqlite.d.ts
+|   |       |   stream.d.ts
+|   |       |   string_decoder.d.ts
+|   |       |   test.d.ts
+|   |       |   timers.d.ts
+|   |       |   tls.d.ts
+|   |       |   trace_events.d.ts
+|   |       |   tty.d.ts
+|   |       |   url.d.ts
+|   |       |   util.d.ts
+|   |       |   v8.d.ts
+|   |       |   vm.d.ts
+|   |       |   wasi.d.ts
+|   |       |   worker_threads.d.ts
+|   |       |   zlib.d.ts
+|   |       |   
+|   |       +---assert
+|   |       |       strict.d.ts
+|   |       |       
+|   |       +---dns
+|   |       |       promises.d.ts
+|   |       |       
+|   |       +---fs
+|   |       |       promises.d.ts
+|   |       |       
+|   |       +---inspector
+|   |       |       promises.d.ts
+|   |       |       
+|   |       +---path
+|   |       |       posix.d.ts
+|   |       |       win32.d.ts
+|   |       |       
+|   |       +---readline
+|   |       |       promises.d.ts
+|   |       |       
+|   |       +---stream
+|   |       |       consumers.d.ts
+|   |       |       iter.d.ts
+|   |       |       promises.d.ts
+|   |       |       web.d.ts
+|   |       |       
+|   |       +---test
+|   |       |       reporters.d.ts
+|   |       |       
+|   |       +---timers
+|   |       |       promises.d.ts
+|   |       |       
+|   |       +---ts5.6
+|   |       |   |   buffer.buffer.d.ts
+|   |       |   |   globals.typedarray.d.ts
+|   |       |   |   index.d.ts
+|   |       |   |   
+|   |       |   \---compatibility
+|   |       |           float16array.d.ts
+|   |       |           
+|   |       +---ts5.7
+|   |       |   |   index.d.ts
+|   |       |   |   
+|   |       |   \---compatibility
+|   |       |           float16array.d.ts
+|   |       |           
+|   |       +---util
+|   |       |       types.d.ts
+|   |       |       
+|   |       +---web-globals
+|   |       |       abortcontroller.d.ts
+|   |       |       blob.d.ts
+|   |       |       console.d.ts
+|   |       |       crypto.d.ts
+|   |       |       domexception.d.ts
+|   |       |       encoding.d.ts
+|   |       |       events.d.ts
+|   |       |       fetch.d.ts
+|   |       |       importmeta.d.ts
+|   |       |       messaging.d.ts
+|   |       |       navigator.d.ts
+|   |       |       performance.d.ts
+|   |       |       storage.d.ts
+|   |       |       streams.d.ts
+|   |       |       timers.d.ts
+|   |       |       url.d.ts
+|   |       |       
+|   |       \---zlib
+|   |               iter.d.ts
+|   |               
 |   +---accepts
 |   |       HISTORY.md
 |   |       index.js
@@ -47,6 +174,26 @@ C:.
 |   |       package.json
 |   |       README.md
 |   |       
+|   +---aws-ssl-profiles
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   
+|   |   \---lib
+|   |       |   index.d.ts
+|   |       |   index.js
+|   |       |   
+|   |       +---@types
+|   |       |       profiles.d.ts
+|   |       |       profiles.js
+|   |       |       
+|   |       \---profiles
+|   |           \---ca
+|   |                   defaults.d.ts
+|   |                   defaults.js
+|   |                   proxies.d.ts
+|   |                   proxies.js
+|   |                   
 |   +---balanced-match
 |   |   |   LICENSE.md
 |   |   |   package.json
@@ -463,6 +610,15 @@ C:.
 |   |           .eslintrc
 |   |           index.js
 |   |           
+|   +---generate-function
+|   |       .travis.yml
+|   |       example.js
+|   |       index.js
+|   |       LICENSE
+|   |       package.json
+|   |       README.md
+|   |       test.js
+|   |       
 |   +---get-intrinsic
 |   |   |   .eslintrc
 |   |   |   .nycrc
@@ -657,6 +813,40 @@ C:.
 |   |       package.json
 |   |       README.md
 |   |       
+|   +---is-property
+|   |       .npmignore
+|   |       is-property.js
+|   |       LICENSE
+|   |       package.json
+|   |       README.md
+|   |       
+|   +---long
+|   |   |   index.d.ts
+|   |   |   index.js
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   types.d.ts
+|   |   |   
+|   |   \---umd
+|   |           index.d.ts
+|   |           index.js
+|   |           package.json
+|   |           types.d.ts
+|   |           
+|   +---lru.min
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   
+|   |   +---browser
+|   |   |       lru.min.js
+|   |   |       
+|   |   \---lib
+|   |           index.d.ts
+|   |           index.js
+|   |           index.mjs
+|   |           
 |   +---math-intrinsics
 |   |   |   .eslintrc
 |   |   |   abs.d.ts
@@ -818,6 +1008,219 @@ C:.
 |   |       license.md
 |   |       package.json
 |   |       readme.md
+|   |       
+|   +---mysql2
+|   |   |   index.d.ts
+|   |   |   index.js
+|   |   |   License
+|   |   |   package.json
+|   |   |   promise.d.ts
+|   |   |   promise.js
+|   |   |   README.md
+|   |   |   
+|   |   +---lib
+|   |   |   |   auth_41.js
+|   |   |   |   compressed_protocol.js
+|   |   |   |   connection.js
+|   |   |   |   connection_config.js
+|   |   |   |   create_connection.js
+|   |   |   |   create_pool.js
+|   |   |   |   create_pool_cluster.js
+|   |   |   |   helpers.js
+|   |   |   |   packet_parser.js
+|   |   |   |   pool.js
+|   |   |   |   pool_cluster.js
+|   |   |   |   pool_config.js
+|   |   |   |   pool_connection.js
+|   |   |   |   results_stream.js
+|   |   |   |   ring_queue.js
+|   |   |   |   server.js
+|   |   |   |   tracing.js
+|   |   |   |   
+|   |   |   +---auth_plugins
+|   |   |   |       caching_sha2_password.js
+|   |   |   |       caching_sha2_password.md
+|   |   |   |       index.js
+|   |   |   |       mysql_clear_password.js
+|   |   |   |       mysql_native_password.js
+|   |   |   |       sha256_password.js
+|   |   |   |       
+|   |   |   +---base
+|   |   |   |       connection.js
+|   |   |   |       pool.js
+|   |   |   |       
+|   |   |   +---commands
+|   |   |   |       auth_switch.js
+|   |   |   |       binlog_dump.js
+|   |   |   |       change_user.js
+|   |   |   |       client_handshake.js
+|   |   |   |       close_statement.js
+|   |   |   |       command.js
+|   |   |   |       execute.js
+|   |   |   |       index.js
+|   |   |   |       ping.js
+|   |   |   |       prepare.js
+|   |   |   |       query.js
+|   |   |   |       quit.js
+|   |   |   |       register_slave.js
+|   |   |   |       reset_connection.js
+|   |   |   |       server_handshake.js
+|   |   |   |       
+|   |   |   +---constants
+|   |   |   |       charsets.js
+|   |   |   |       charset_encodings.js
+|   |   |   |       client.js
+|   |   |   |       commands.js
+|   |   |   |       cursor.js
+|   |   |   |       encoding_charset.js
+|   |   |   |       errors.js
+|   |   |   |       field_flags.js
+|   |   |   |       mariadb_client.js
+|   |   |   |       server_status.js
+|   |   |   |       session_track.js
+|   |   |   |       ssl_profiles.js
+|   |   |   |       types.js
+|   |   |   |       
+|   |   |   +---packets
+|   |   |   |       auth_next_factor.js
+|   |   |   |       auth_switch_request.js
+|   |   |   |       auth_switch_request_more_data.js
+|   |   |   |       auth_switch_response.js
+|   |   |   |       binary_row.js
+|   |   |   |       binlog_dump.js
+|   |   |   |       binlog_query_statusvars.js
+|   |   |   |       change_user.js
+|   |   |   |       close_statement.js
+|   |   |   |       column_definition.js
+|   |   |   |       encode_parameter.js
+|   |   |   |       execute.js
+|   |   |   |       handshake.js
+|   |   |   |       handshake_response.js
+|   |   |   |       index.js
+|   |   |   |       packet.js
+|   |   |   |       prepared_statement_header.js
+|   |   |   |       prepare_statement.js
+|   |   |   |       query.js
+|   |   |   |       register_slave.js
+|   |   |   |       reset_connection.js
+|   |   |   |       resultset_header.js
+|   |   |   |       ssl_request.js
+|   |   |   |       text_row.js
+|   |   |   |       
+|   |   |   +---parsers
+|   |   |   |       binary_parser.js
+|   |   |   |       parser_cache.js
+|   |   |   |       static_binary_parser.js
+|   |   |   |       static_text_parser.js
+|   |   |   |       string.js
+|   |   |   |       text_parser.js
+|   |   |   |       
+|   |   |   \---promise
+|   |   |           capture_local_err.js
+|   |   |           connection.js
+|   |   |           inherit_events.js
+|   |   |           make_done_cb.js
+|   |   |           pool.js
+|   |   |           pool_cluster.js
+|   |   |           pool_connection.js
+|   |   |           prepared_statement_info.js
+|   |   |           
+|   |   +---node_modules
+|   |   |   \---iconv-lite
+|   |   |       |   LICENSE
+|   |   |       |   package.json
+|   |   |       |   README.md
+|   |   |       |   
+|   |   |       +---encodings
+|   |   |       |   |   dbcs-codec.js
+|   |   |       |   |   dbcs-data.js
+|   |   |       |   |   index.js
+|   |   |       |   |   internal.js
+|   |   |       |   |   sbcs-codec.js
+|   |   |       |   |   sbcs-data-generated.js
+|   |   |       |   |   sbcs-data.js
+|   |   |       |   |   utf16.js
+|   |   |       |   |   utf32.js
+|   |   |       |   |   utf7.js
+|   |   |       |   |   
+|   |   |       |   \---tables
+|   |   |       |           big5-added.json
+|   |   |       |           cp936.json
+|   |   |       |           cp949.json
+|   |   |       |           cp950.json
+|   |   |       |           eucjp.json
+|   |   |       |           gb18030-ranges.json
+|   |   |       |           gbk-added.json
+|   |   |       |           shiftjis.json
+|   |   |       |           
+|   |   |       +---lib
+|   |   |       |   |   bom-handling.js
+|   |   |       |   |   index.d.ts
+|   |   |       |   |   index.js
+|   |   |       |   |   streams.js
+|   |   |       |   |   
+|   |   |       |   \---helpers
+|   |   |       |           merge-exports.js
+|   |   |       |           
+|   |   |       \---types
+|   |   |               encodings.d.ts
+|   |   |               
+|   |   \---typings
+|   |       \---mysql
+|   |           |   index.d.ts
+|   |           |   info.txt
+|   |           |   LICENSE.txt
+|   |           |   
+|   |           \---lib
+|   |               |   Auth.d.ts
+|   |               |   Connection.d.ts
+|   |               |   Pool.d.ts
+|   |               |   PoolCluster.d.ts
+|   |               |   PoolConnection.d.ts
+|   |               |   Server.d.ts
+|   |               |   Tracing.d.ts
+|   |               |   
+|   |               +---constants
+|   |               |       Charsets.d.ts
+|   |               |       CharsetToEncoding.d.ts
+|   |               |       index.d.ts
+|   |               |       Types.d.ts
+|   |               |       
+|   |               +---parsers
+|   |               |       index.d.ts
+|   |               |       ParserCache.d.ts
+|   |               |       typeCast.d.ts
+|   |               |       
+|   |               \---protocol
+|   |                   +---packets
+|   |                   |   |   Field.d.ts
+|   |                   |   |   FieldPacket.d.ts
+|   |                   |   |   index.d.ts
+|   |                   |   |   OkPacket.d.ts
+|   |                   |   |   ProcedurePacket.d.ts
+|   |                   |   |   ResultSetHeader.d.ts
+|   |                   |   |   RowDataPacket.d.ts
+|   |                   |   |   
+|   |                   |   \---params
+|   |                   |           ErrorPacketParams.d.ts
+|   |                   |           OkPacketParams.d.ts
+|   |                   |           
+|   |                   \---sequences
+|   |                       |   ExecutableBase.d.ts
+|   |                       |   Prepare.d.ts
+|   |                       |   Query.d.ts
+|   |                       |   QueryableBase.d.ts
+|   |                       |   Sequence.d.ts
+|   |                       |   
+|   |                       \---promise
+|   |                               ExecutableBase.d.ts
+|   |                               QueryableBase.d.ts
+|   |                               
+|   +---named-placeholders
+|   |       index.js
+|   |       LICENSE
+|   |       package.json
+|   |       README.md
 |   |       
 |   +---negotiator
 |   |   |   HISTORY.md
@@ -989,164 +1392,6 @@ C:.
 |   |       package.json
 |   |       Readme.md
 |   |       
-|   +---pg
-|   |   |   LICENSE
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   +---esm
-|   |   |       index.mjs
-|   |   |       
-|   |   \---lib
-|   |       |   client.js
-|   |       |   connection-parameters.js
-|   |       |   connection.js
-|   |       |   defaults.js
-|   |       |   index.js
-|   |       |   query.js
-|   |       |   result.js
-|   |       |   stream.js
-|   |       |   type-overrides.js
-|   |       |   utils.js
-|   |       |   
-|   |       +---crypto
-|   |       |       cert-signatures.js
-|   |       |       sasl.js
-|   |       |       utils.js
-|   |       |       
-|   |       \---native
-|   |               client.js
-|   |               index.js
-|   |               query.js
-|   |               
-|   +---pg-cloudflare
-|   |   |   LICENSE
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   +---dist
-|   |   |       empty.d.ts
-|   |   |       empty.js
-|   |   |       empty.js.map
-|   |   |       index.d.ts
-|   |   |       index.js
-|   |   |       index.js.map
-|   |   |       
-|   |   +---esm
-|   |   |       index.mjs
-|   |   |       
-|   |   \---src
-|   |           empty.ts
-|   |           index.ts
-|   |           types.d.ts
-|   |           
-|   +---pg-connection-string
-|   |   |   index.d.ts
-|   |   |   index.js
-|   |   |   LICENSE
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   \---esm
-|   |           index.mjs
-|   |           
-|   +---pg-int8
-|   |       index.js
-|   |       LICENSE
-|   |       package.json
-|   |       README.md
-|   |       
-|   +---pg-pool
-|   |   |   index.js
-|   |   |   LICENSE
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   \---esm
-|   |           index.mjs
-|   |           
-|   +---pg-protocol
-|   |   |   LICENSE
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   +---dist
-|   |   |       b.d.ts
-|   |   |       b.js
-|   |   |       b.js.map
-|   |   |       buffer-reader.d.ts
-|   |   |       buffer-reader.js
-|   |   |       buffer-reader.js.map
-|   |   |       buffer-writer.d.ts
-|   |   |       buffer-writer.js
-|   |   |       buffer-writer.js.map
-|   |   |       inbound-parser.test.d.ts
-|   |   |       inbound-parser.test.js
-|   |   |       inbound-parser.test.js.map
-|   |   |       index.d.ts
-|   |   |       index.js
-|   |   |       index.js.map
-|   |   |       messages.d.ts
-|   |   |       messages.js
-|   |   |       messages.js.map
-|   |   |       outbound-serializer.test.d.ts
-|   |   |       outbound-serializer.test.js
-|   |   |       outbound-serializer.test.js.map
-|   |   |       parser.d.ts
-|   |   |       parser.js
-|   |   |       parser.js.map
-|   |   |       serializer.d.ts
-|   |   |       serializer.js
-|   |   |       serializer.js.map
-|   |   |       
-|   |   +---esm
-|   |   |       index.js
-|   |   |       
-|   |   \---src
-|   |       |   b.ts
-|   |       |   buffer-reader.ts
-|   |       |   buffer-writer.ts
-|   |       |   inbound-parser.test.ts
-|   |       |   index.ts
-|   |       |   messages.ts
-|   |       |   outbound-serializer.test.ts
-|   |       |   parser.ts
-|   |       |   serializer.ts
-|   |       |   
-|   |       +---testing
-|   |       |       buffer-list.ts
-|   |       |       test-buffers.ts
-|   |       |       
-|   |       \---types
-|   |               chunky.d.ts
-|   |               
-|   +---pg-types
-|   |   |   .travis.yml
-|   |   |   index.d.ts
-|   |   |   index.js
-|   |   |   index.test-d.ts
-|   |   |   Makefile
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   +---lib
-|   |   |       arrayParser.js
-|   |   |       binaryParsers.js
-|   |   |       builtins.js
-|   |   |       textParsers.js
-|   |   |       
-|   |   \---test
-|   |           index.js
-|   |           types.js
-|   |           
-|   +---pgpass
-|   |   |   package.json
-|   |   |   README.md
-|   |   |   
-|   |   \---lib
-|   |           helper.js
-|   |           index.js
-|   |           
 |   +---picomatch
 |   |   |   index.js
 |   |   |   LICENSE
@@ -1160,32 +1405,6 @@ C:.
 |   |           scan.js
 |   |           utils.js
 |   |           
-|   +---postgres-array
-|   |       index.d.ts
-|   |       index.js
-|   |       license
-|   |       package.json
-|   |       readme.md
-|   |       
-|   +---postgres-bytea
-|   |       index.js
-|   |       license
-|   |       package.json
-|   |       readme.md
-|   |       
-|   +---postgres-date
-|   |       index.js
-|   |       license
-|   |       package.json
-|   |       readme.md
-|   |       
-|   +---postgres-interval
-|   |       index.d.ts
-|   |       index.js
-|   |       license
-|   |       package.json
-|   |       readme.md
-|   |       
 |   +---proxy-addr
 |   |       HISTORY.md
 |   |       index.js
@@ -1471,14 +1690,18 @@ C:.
 |   |           isNpmOrYarn.ts
 |   |           types.ts
 |   |           
-|   +---split2
-|   |       bench.js
-|   |       index.js
-|   |       LICENSE
-|   |       package.json
-|   |       README.md
-|   |       test.js
-|   |       
+|   +---sql-escaper
+|   |   |   LICENSE
+|   |   |   package.json
+|   |   |   README.md
+|   |   |   
+|   |   \---lib
+|   |           index.d.ts
+|   |           index.js
+|   |           index.mjs
+|   |           types.d.ts
+|   |           types.js
+|   |           
 |   +---statuses
 |   |       codes.json
 |   |       HISTORY.md
@@ -1539,6 +1762,56 @@ C:.
 |   |   \---lib
 |   |           undefsafe.js
 |   |           
+|   +---undici-types
+|   |       agent.d.ts
+|   |       api.d.ts
+|   |       balanced-pool.d.ts
+|   |       cache-interceptor.d.ts
+|   |       cache.d.ts
+|   |       client-stats.d.ts
+|   |       client.d.ts
+|   |       connector.d.ts
+|   |       content-type.d.ts
+|   |       cookies.d.ts
+|   |       diagnostics-channel.d.ts
+|   |       dispatcher.d.ts
+|   |       dispatcher1-wrapper.d.ts
+|   |       env-http-proxy-agent.d.ts
+|   |       errors.d.ts
+|   |       eventsource.d.ts
+|   |       fetch.d.ts
+|   |       formdata.d.ts
+|   |       global-dispatcher.d.ts
+|   |       global-origin.d.ts
+|   |       h2c-client.d.ts
+|   |       handlers.d.ts
+|   |       header.d.ts
+|   |       index.d.ts
+|   |       interceptors.d.ts
+|   |       LICENSE
+|   |       mock-agent.d.ts
+|   |       mock-call-history.d.ts
+|   |       mock-client.d.ts
+|   |       mock-errors.d.ts
+|   |       mock-interceptor.d.ts
+|   |       mock-pool.d.ts
+|   |       package.json
+|   |       patch.d.ts
+|   |       pool-stats.d.ts
+|   |       pool.d.ts
+|   |       proxy-agent.d.ts
+|   |       readable.d.ts
+|   |       README.md
+|   |       retry-agent.d.ts
+|   |       retry-handler.d.ts
+|   |       round-robin-pool.d.ts
+|   |       snapshot-agent.d.ts
+|   |       socks5-proxy-agent.d.ts
+|   |       util.d.ts
+|   |       utility.d.ts
+|   |       webidl.d.ts
+|   |       websocket.d.ts
+|   |       
 |   +---unpipe
 |   |       HISTORY.md
 |   |       index.js
@@ -1553,53 +1826,63 @@ C:.
 |   |       package.json
 |   |       README.md
 |   |       
-|   +---vary
-|   |       HISTORY.md
-|   |       index.js
-|   |       LICENSE
-|   |       package.json
-|   |       README.md
-|   |       
-|   \---xtend
-|           .jshintrc
-|           immutable.js
+|   \---vary
+|           HISTORY.md
+|           index.js
 |           LICENSE
-|           mutable.js
 |           package.json
 |           README.md
-|           test.js
 |           
 \---src
     |   app.js
     |   
     +---config
     |       db.js
+    |       list-tables.js
+    |       test-db.js
     |       
     +---controllers
     |       brandController.js
     |       categoryController.js
+    |       priceCodeController.js
     |       productController.js
-    |       stockController.js
-    |       stockController_backup.js
+    |       productImageController.js
+    |       productStockController.js
+    |       reportController.js
+    |       stockMovementController.js
+    |       tierPriceController.js
     |       unitController.js
+    |       unitConversionController.js
     |       variantController.js
     |       
     +---models
     |       brandModel.js
     |       categoryModel.js
+    |       priceCodeModel.js
+    |       productImageModel.js
     |       productModel.js
-    |       stockBalanceModel.js
-    |       stockModel_backup.js
+    |       productStockModel.js
+    |       reportModel.js
     |       stockMovementModel.js
     |       storeModel.js
+    |       supplierModel.js
+    |       tierPriceModel.js
+    |       unitConversionModel.js
     |       unitModel.js
+    |       userModel.js
     |       variantModel.js
     |       
     \---routes
             brandRoutes.js
             categoryRoutes.js
+            priceCodeRoutes.js
+            productImageRoutes.js
             productRoutes.js
+            reportRoutes.js
+            stockMovementRoutes.js
             stockRoutes.js
+            tierPriceRoutes.js
+            unitConversionRoutes.js
             unitRoutes.js
             variantRoutes.js
             
