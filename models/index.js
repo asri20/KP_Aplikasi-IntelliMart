@@ -6,50 +6,37 @@ const DataTypes = require('sequelize').DataTypes;
 const Supplier          = require('./supplier')(sequelize, DataTypes);
 const PurchaseOrder     = require('./purchaseOrder')(sequelize, DataTypes);
 const PurchaseOrderItem = require('./purchaseOrderItem')(sequelize, DataTypes);
-const GoodsReceipt      = require('./goodsReceipt')(sequelize, DataTypes);
-const GoodsReceiptItem  = require('./goodsReceiptItem')(sequelize, DataTypes);
 
-// ── Model User & Multi-Toko (Tambahan Baru) ─────────────────────────────────
-const User       = require('./user')(sequelize, DataTypes);
-const Store      = require('./toko')(sequelize, DataTypes);
-const Role       = require('./role')(sequelize, DataTypes);
-const StoreUser  = require('./storeUser')(sequelize, DataTypes);
+// ── Model Core (User, Toko, Role) ───────────────────────────────────────────
+const User  = require('./user')(sequelize, DataTypes);
+const Store = require('./toko')(sequelize, DataTypes);
+const Role  = require('./role')(sequelize, DataTypes);
 
-// ── Relasi Purchase Order ────────────────────────────────────────────────────
+// ── Relasi Purchase Order & Supplier ─────────────────────────────────────────
 PurchaseOrder.belongsTo(Supplier, { foreignKey: 'supplier_id', as: 'supplier' });
 Supplier.hasMany(PurchaseOrder,   { foreignKey: 'supplier_id', as: 'purchaseOrders' });
 
+// ── Relasi Purchase Order & Detail Items ─────────────────────────────────────
 PurchaseOrder.hasMany(PurchaseOrderItem, { foreignKey: 'po_id', as: 'items' });
-PurchaseOrderItem.belongsTo(PurchaseOrder, { foreignKey: 'po_id' });
+PurchaseOrderItem.belongsTo(PurchaseOrder, { foreignKey: 'po_id', as: 'purchaseOrder' });
 
-// ── Relasi Goods Receipt ─────────────────────────────────────────────────────
-GoodsReceipt.belongsTo(Supplier,      { foreignKey: 'supplier_id', as: 'supplier' });
-GoodsReceipt.belongsTo(PurchaseOrder, { foreignKey: 'po_id', as: 'purchaseOrder' });
+// ── Relasi Purchase Order ke Toko & User (Pembuat PO) ───────────────────────
+PurchaseOrder.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });
+Store.hasMany(PurchaseOrder,   { foreignKey: 'store_id', as: 'purchaseOrders' });
 
-GoodsReceipt.hasMany(GoodsReceiptItem, { foreignKey: 'receipt_id', as: 'items' });
-GoodsReceiptItem.belongsTo(GoodsReceipt, { foreignKey: 'receipt_id' });
+PurchaseOrder.belongsTo(User,  { foreignKey: 'created_by', as: 'creator' });
 
-// Link receipt item → PO item (opsional)
-GoodsReceiptItem.belongsTo(PurchaseOrderItem, { foreignKey: 'po_item_id', as: 'poItem' });
-
-// ── Relasi User & Multi-Toko ─────────────────────────────────────────────────
-User.hasMany(StoreUser, { foreignKey: 'user_id', as: 'storeUsers' });
-Store.hasMany(StoreUser, { foreignKey: 'store_id', as: 'storeUsers' });
-Role.hasMany(StoreUser, { foreignKey: 'role_id', as: 'storeUsers' });
-
-StoreUser.belongsTo(User, { foreignKey: 'user_id' });
-StoreUser.belongsTo(Store, { foreignKey: 'store_id', as: 'store' });   // ← Alias 'store'
-StoreUser.belongsTo(Role, { foreignKey: 'role_id', as: 'role' });     // ← Alias 'role'
+// ── Relasi Toko, Owner, & Manager (Modul 0 Core) ─────────────────────────────
+Store.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
+Store.belongsTo(User, { foreignKey: 'manager_id', as: 'manager' });
+User.hasMany(Store,   { foreignKey: 'owner_id', as: 'ownedStores' });
 
 module.exports = {
   sequelize,
   Supplier,
   PurchaseOrder,
   PurchaseOrderItem,
-  GoodsReceipt,
-  GoodsReceiptItem,
-  User,        // ← Tambahan
-  Store,       // ← Tambahan
-  Role,        // ← Tambahan
-  StoreUser    // ← Tambahan
+  User,
+  Store,
+  Role
 };

@@ -11,10 +11,9 @@ module.exports = (sequelize, DataTypes) => {
       unique: true,
       allowNull: false
     },
-    // Boleh null → bisa terima barang tanpa PO (direct receive)
     po_id: {
       type: DataTypes.INTEGER,
-      allowNull: true
+      allowNull: true   // Boleh null untuk direct receive
     },
     store_id: {
       type: DataTypes.INTEGER,

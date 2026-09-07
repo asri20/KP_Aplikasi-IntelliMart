@@ -57,7 +57,7 @@ exports.createPO = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const { supplier_id, user_id, expected_delivery_date, notes, items } = req.body;
-    const store_id = req.user.store_id;   // Dari JWT
+    const store_id = req.user.store_id;
 
     if (!supplier_id || !user_id) {
       await t.rollback();
@@ -74,7 +74,7 @@ exports.createPO = async (req, res) => {
 
     const po = await PurchaseOrder.create({
       po_number,
-      store_id,                    // ← Penting
+      store_id,
       supplier_id,
       user_id,
       expected_delivery_date,
@@ -87,7 +87,7 @@ exports.createPO = async (req, res) => {
       po_id: po.po_id,
       variant_id: item.variant_id,
       quantity: item.quantity,
-      unit_price: item.unit_price
+      unit_price: item.unit_price   // Sesuai model kamu (unit_price)
     }));
 
     await PurchaseOrderItem.bulkCreate(poItems, { transaction: t });

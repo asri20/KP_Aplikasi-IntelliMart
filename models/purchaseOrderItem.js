@@ -1,7 +1,7 @@
 // models/purchaseOrderItem.js
 module.exports = (sequelize, DataTypes) => {
   const PurchaseOrderItem = sequelize.define('PurchaseOrderItem', {
-    po_item_id: {
+    id: { // Diubah dari po_item_id ke id sesuai standar PK database Intellimart
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true
@@ -14,36 +14,34 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    quantity: {
-      type: DataTypes.INTEGER,
+    qty_ordered: { // Diubah dari quantity ke qty_ordered agar berpasangan dengan qty_received
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false
     },
-    unit_price: {
-      type: DataTypes.DECIMAL(15, 2),
+    qty_received: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0.00
+    },
+    unit_cost: { // Diubah dari unit_price ke unit_cost (modal harga beli dari supplier)
+      type: DataTypes.DECIMAL(12, 2),
       allowNull: false
     },
     subtotal: {
-      type: DataTypes.DECIMAL(15, 2),
-      // FIX: subtotal dihitung otomatis lewat hook, bukan manual di controller
-    },
-    qty_received: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0  // bertambah saat GoodsReceipt diverifikasi
+      type: DataTypes.DECIMAL(12, 2) // Menggunakan presisi standar DECIMAL(12,2)
     }
   }, {
-    tableName: 'tt_purchase_order_items',
+    tableName: 'tt_purchase_order_detail', // Nama tabel fisik resmi di database MySQL Intellimart
     timestamps: true,
-    // FIX: konsisten pakai snake_case seperti model lain
     createdAt: 'created_at',
     updatedAt: 'updated_at',
     hooks: {
       // Hitung subtotal otomatis sebelum create/update
       beforeCreate(item) {
-        item.subtotal = parseFloat(item.quantity) * parseFloat(item.unit_price);
+        item.subtotal = parseFloat(item.qty_ordered || 0) * parseFloat(item.unit_cost || 0);
       },
       beforeUpdate(item) {
-        if (item.changed('quantity') || item.changed('unit_price')) {
-          item.subtotal = parseFloat(item.quantity) * parseFloat(item.unit_price);
+        if (item.changed('qty_ordered') || item.changed('unit_cost')) {
+          item.subtotal = parseFloat(item.qty_ordered || 0) * parseFloat(item.unit_cost || 0);
         }
       }
     }

@@ -1,53 +1,37 @@
 // server.js
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
+require('dotenv').config();
+
+// Import koneksi Sequelize dari folder models (Poin 4)
 const { sequelize } = require('./models');
 
-// Middleware Auth
-const { authenticate } = require('./middleware/auth');
-
-dotenv.config();
+// Import rute modular yang sudah dibuat (Poin 5, 6, 7)
+const productRoutes = require('./routes/products');
+const transactionRoutes = require('./routes/transactions');
+const poRoutes = require('./routes/purchaseOrder');
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/api/auth', require('./routes/authRoutes'));
 
-// ── Routes dengan Proteksi Auth & Multi-Toko ─────────────────────────────────
-app.use('/api/suppliers', authenticate, require('./routes/supplierRoutes'));
-app.use('/api/purchase-orders', authenticate, require('./routes/purchaseOrderRoutes'));
-app.use('/api/goods-receipts', authenticate, require('./routes/goodsReceiptRoutes')); // ← BARU
+// Mounting Rute API
+app.use('/api/products', productRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/po', poRoutes);
 
-// ── Public Routes (tidak perlu auth) ───────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server berjalan', 
-    timestamp: new Date() 
-  });
-});
+const PORT = process.env.PORT || 5000;
 
-// ── 404 Handler ────────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: `Route ${req.method} ${req.path} tidak ditemukan` 
-  });
-});
-
-// ── Start Server ───────────────────────────────────────────────────────────
-sequelize.sync({ alter: true })  // alter: true = update tabel tanpa hapus data
+// Cek koneksi database & jalankan server Express
+sequelize.authenticate()
   .then(() => {
-    console.log('✅ Database connected & tables synced');
-    const PORT = process.env.PORT || 5000;
+    console.log('Koneksi Sequelize ke database MySQL Intellimart BERHASIL!');
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`Server Intellimart berjalan di port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('❌ Database connection error:', err);
+    console.error('Gagal terhubung ke database MySQL:', err.message);
   });

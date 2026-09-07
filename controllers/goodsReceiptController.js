@@ -82,19 +82,6 @@ exports.createReceipt = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Harus ada minimal 1 item yang diterima' });
     }
 
-    // Validasi: kalau ada po_id, pastikan PO-nya ada dan bukan cancelled
-    if (po_id) {
-      const po = await PurchaseOrder.findByPk(po_id, { transaction: t });
-      if (!po) {
-        await t.rollback();
-        return res.status(404).json({ success: false, message: 'Purchase Order tidak ditemukan' });
-      }
-      if (po.status === 'cancelled') {
-        await t.rollback();
-        return res.status(400).json({ success: false, message: 'PO sudah dibatalkan, tidak bisa menerima barang' });
-      }
-    }
-
     const receipt_number = await generateReceiptNumber();
 
     const receipt = await GoodsReceipt.create({
@@ -109,12 +96,12 @@ exports.createReceipt = async (req, res) => {
     }, { transaction: t });
 
     const receiptItems = items.map(item => ({
-      receipt_id:   receipt.receipt_id,
-      po_item_id:   item.po_item_id   || null,
-      variant_id:   item.variant_id,
+      receipt_id: receipt.receipt_id,
+      po_item_id: item.po_item_id || null,
+      variant_id: item.variant_id,
       qty_received: item.qty_received,
-      unit_price:   item.unit_price,
-      condition:    item.condition    || 'good'
+      unit_price: item.unit_price,
+      condition: item.condition || 'good'
     }));
 
     await GoodsReceiptItem.bulkCreate(receiptItems, { transaction: t });
@@ -123,7 +110,7 @@ exports.createReceipt = async (req, res) => {
 
     const result = await GoodsReceipt.findByPk(receipt.receipt_id, {
       include: [
-        { model: Supplier,         as: 'supplier' },
+        { model: Supplier, as: 'supplier' },
         { model: GoodsReceiptItem, as: 'items' }
       ]
     });

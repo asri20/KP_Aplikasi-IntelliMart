@@ -10,7 +10,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    // Link ke item PO (opsional — null jika direct receive)
     po_item_id: {
       type: DataTypes.INTEGER,
       allowNull: true
