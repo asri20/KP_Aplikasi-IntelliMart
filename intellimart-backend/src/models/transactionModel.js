@@ -1,7 +1,54 @@
 const db = require("../config/db");
 
 const TransactionModel = {
-  // Ambil semua transaksi
+  // 1. Ambil detail transaksi lengkap berdasarkan ID (untuk Cetak Struk/Invoice)
+  getById: async (transactionId) => {
+    try {
+      // Ambil Header Transaksi langsung dari tt_transaction
+      const [headerRows] = await db.query(
+        `SELECT * FROM tt_transaction WHERE id = ?`,
+        [transactionId],
+      );
+
+      if (headerRows.length === 0) return null;
+
+      // Ambil Detail Item Transaksi dari tt_transaction_detail
+      const [detailRows] = await db.query(
+        `SELECT * FROM tt_transaction_detail WHERE transaction_id = ?`,
+        [transactionId],
+      );
+
+      return {
+        header: headerRows[0],
+        items: detailRows,
+      };
+    } catch (err) {
+      console.error("Error fetching transaction by ID:", err.message);
+      throw err;
+    }
+  },
+
+  // 2. Ambil harga bertingkat (bulk pricing) dari tabel tr_tier_price
+  getTierPrice: async (priceCodeId, qty) => {
+    try {
+      const [rows] = await db.query(
+        `SELECT unit_price 
+         FROM tr_tier_price 
+         WHERE price_code_id = ? 
+           AND min_qty <= ? 
+           AND (max_qty >= ? OR max_qty IS NULL)
+         ORDER BY min_qty DESC 
+         LIMIT 1`,
+        [priceCodeId, qty, qty],
+      );
+      return rows.length > 0 ? rows[0].unit_price : null;
+    } catch (err) {
+      console.error("Error fetching tier price:", err.message);
+      return null;
+    }
+  },
+
+  // 3. Ambil semua data transaksi
   getAll: async () => {
     const [rows] = await db.query(
       "SELECT * FROM tt_transaction ORDER BY created_at DESC",
@@ -9,7 +56,7 @@ const TransactionModel = {
     return rows;
   },
 
-  // Simpan header transaksi baru
+  // 4. Simpan header transaksi baru ke tt_transaction
   create: async (transactionData) => {
     const {
       customer_id,
@@ -35,7 +82,7 @@ const TransactionModel = {
     return result.insertId;
   },
 
-  // Simpan detail item transaksi
+  // 5. Simpan detail item transaksi ke tt_transaction_detail
   createDetail: async (detailData) => {
     const { transaction_id, variant_id, quantity, price_per_unit, subtotal } =
       detailData;
@@ -48,7 +95,7 @@ const TransactionModel = {
     return result;
   },
 
-  // Log pergerakan stok keluar
+  // 6. Log pergerakan stok keluar ke tt_stock_movement
   createStockMovement: async (movementData) => {
     const { store_id, variant_id, qty, reference_id, created_by } =
       movementData;
