@@ -1,5 +1,4 @@
 const unitModel = require('../models/unitModel');
-const unitModel = require('../models/unitModel');
 
 async function listUnits(req, res, next) {
   try {

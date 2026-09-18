@@ -1,7 +1,7 @@
 {
   "name": "intellimart-backend",
   "version": "1.0.0",
-  "description": "Backend API for IntelliMart - Sistem Manajemen Produk & Stok",
+  "description": "Backend API for IntelliMart",
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
@@ -12,14 +12,9 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-<<<<<<< HEAD
-    "express": "^4.19.2",
-    "mysql2": "^3.23.3"
-=======
     "express": "^4.22.2",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.3"
->>>>>>> origin/modul_UserKeamanan
   },
   "devDependencies": {
     "nodemon": "^3.1.4"

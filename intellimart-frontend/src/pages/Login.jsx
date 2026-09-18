@@ -1,178 +1,130 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import { useStore } from "../hooks/useStore";
-
-const DEMO_ACCOUNTS = [
-  { label: "Owner", email: "owner@demo.com", badge: "owner" },
-  { label: "Manager", email: "manager@demo.com", badge: "manager" },
-  { label: "Kasir", email: "kasir@demo.com", badge: "cashier" },
-];
-
-const BADGE_COLOR = {
-  owner: "#f59e0b",
-  manager: "#6366f1",
-  cashier: "#22c55e",
-};
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
+import AuthShell from "../components/AuthShell";
+import { getSession, login } from "../services/auth";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
-  const { activeStore } = useStore();
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const [show, setShow] = useState(false);
+  const [identity, setIdentity] = useState("");
   const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [toast, setToast] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(activeStore ? "/dashboard" : "/select-store", { replace: true });
-    }
-  }, [isAuthenticated, activeStore, navigate]);
+    if (getSession()) navigate("/dashboard/owner", { replace: true });
+  }, [navigate]);
 
-  const showToast = (msg, type = "error") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const handleSubmit = async (e) => {
+  async function submit(e) {
     e.preventDefault();
-    clearError();
-    const result = await login(email, password);
-    if (result.success) {
-      showToast("Login berhasil! Selamat datang 🎉", "success");
-      setTimeout(() => navigate("/select-store", { replace: true }), 600);
-    } else {
-      showToast(result.error || "Login gagal");
-    }
-  };
+    setError("");
+    setLoading(true);
 
-  const fillDemo = (acc) => {
-    setEmail(acc.email);
-    setPassword("123456");
-  };
+    try {
+      const result = await login({ identity, password });
+
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+
+      const from = location.state?.from;
+      const destination =
+        from ||
+        (result.session.role === "OWNER"
+          ? "/dashboard/owner"
+          : "/login");
+
+      navigate(destination, { replace: true });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <div className="login-root">
-      {/* Background decoration */}
-      <div className="login-bg">
-        <div className="login-bg__blob login-bg__blob--1" />
-        <div className="login-bg__blob login-bg__blob--2" />
-        <div className="login-bg__grid" />
+    <AuthShell
+      topRight={
+        <>
+          POS &amp; Inventory Management
+          <span className="ml-2 inline-block h-px w-7 bg-[#aab8cb]" />
+        </>
+      }
+    >
+      <div className="mb-8">
+        <div className="mb-6 h-1 w-12 rounded-full bg-[#16b8b8]" />
+        <h1 className="text-[38px] font-extrabold leading-[1.05] tracking-[-0.045em] text-[#132d63]">
+          Welcome Back to
+          <span className="block text-[#19aaa9]">IntelliMart</span>
+        </h1>
+        <p className="mt-5 text-[15px] leading-7 text-[#536987]">
+          Sign in to your account to manage your store, inventory, and sales — all in one place.
+        </p>
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <div className={`im-toast im-toast--${toast.type}`}>
-          <span>{toast.type === "success" ? "✓" : "✕"}</span>
-          {toast.msg}
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+          {error}
         </div>
       )}
 
-      <div className="login-card">
-        {/* Logo */}
-        <div className="login-logo">
-          <div className="login-logo__icon">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <rect width="28" height="28" rx="8" fill="#0ea5e9" />
-              <path d="M7 14h4l3-6 3 12 3-6h1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <div>
-            <div className="login-logo__name">IntelliMart</div>
-            <div className="login-logo__tagline">Multi-Store POS + AI System</div>
-          </div>
+      <form onSubmit={submit} className="space-y-5">
+        <div className="relative">
+          <UserRound className="absolute left-5 top-1/2 -translate-y-1/2 text-[#627795]" size={20} />
+          <input
+            required
+            value={identity}
+            onChange={e => setIdentity(e.target.value)}
+            placeholder="Email/Username"
+            className="auth-input pl-16 pr-5"
+          />
         </div>
 
-        <h1 className="login-title">Selamat Datang</h1>
-        <p className="login-sub">Masuk ke akun toko Anda</p>
-
-        {/* Demo accounts */}
-        <div className="demo-accounts">
-          <div className="demo-accounts__label">Akun Demo:</div>
-          <div className="demo-accounts__list">
-            {DEMO_ACCOUNTS.map((acc) => (
-              <button
-                key={acc.email}
-                className="demo-pill"
-                style={{ "--badge": BADGE_COLOR[acc.badge] }}
-                onClick={() => fillDemo(acc)}
-                type="button"
-              >
-                <span className="demo-pill__dot" />
-                {acc.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="login-field">
-            <label className="login-label">Email</label>
-            <div className="login-input-wrap">
-              <svg className="login-input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2 4l6 5 6-5M2 4h12v9H2V4z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <input
-                type="email"
-                className="login-input"
-                placeholder="email@demo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
-            </div>
-          </div>
-
-          <div className="login-field">
-            <label className="login-label">Password</label>
-            <div className="login-input-wrap">
-              <svg className="login-input-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="3" y="7" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4" />
-                <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-              </svg>
-              <input
-                type={showPass ? "text" : "password"}
-                className="login-input"
-                placeholder="••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-              <button
-                type="button"
-                className="login-eye"
-                onClick={() => setShowPass((v) => !v)}
-              >
-                {showPass ? "🙈" : "👁️"}
-              </button>
-            </div>
-          </div>
-
-          {error && <div className="login-error">{error}</div>}
-
+        <div className="relative">
+          <LockKeyhole className="absolute left-5 top-1/2 -translate-y-1/2 text-[#627795]" size={20} />
+          <input
+            required
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            type={show ? "text" : "password"}
+            placeholder="Password"
+            className="auth-input pl-16 pr-14"
+          />
           <button
-            type="submit"
-            className={`login-btn ${isLoading ? "loading" : ""}`}
-            disabled={isLoading}
+            type="button"
+            onClick={() => setShow(v => !v)}
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-[#627795]"
+            aria-label="Toggle password visibility"
           >
-            {isLoading ? (
-              <>
-                <span className="btn-spinner" />
-                Memverifikasi...
-              </>
-            ) : (
-              "Masuk Sekarang"
-            )}
+            {show ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
-        </form>
-
-        <div className="login-hint">
-          Password semua akun demo: <strong>123456</strong>
         </div>
+
+        <button
+          disabled={loading}
+          className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-[#19b6b4] font-bold text-white shadow-[0_12px_28px_rgba(25,182,180,.18)] transition hover:bg-[#14a6a5] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {loading ? "Signing in..." : <>Login <ArrowRight size={21} /></>}
+        </button>
+      </form>
+
+      <div className="mt-8 text-center">
+        <button type="button" className="text-sm font-semibold text-[#0ca7a8]">
+          Forgot Password?
+        </button>
       </div>
-    </div>
+
+      <p className="mt-7 text-center text-xs text-[#8e9cb1]">
+        Don&apos;t have an account?{" "}
+        <Link to="/register" className="font-bold text-[#0ca7a8]">
+          Register here
+        </Link>
+      </p>
+
+      <div className="mt-6 rounded-xl bg-[#f6f9fc] p-3 text-center text-[11px] text-[#71839e]">
+        Demo login: <b>owner@intellimart.local</b> / <b>owner123</b>
+      </div>
+    </AuthShell>
   );
 }
