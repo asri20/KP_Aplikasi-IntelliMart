@@ -1,16 +1,59 @@
-# React + Vite
+# IntelliMart — Complete Frontend Starter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a working frontend flow from registration to the Owner Dashboard.
 
-Currently, two official plugins are available:
+## Flow
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Splash Screen
+→ Login
+→ Register
+→ Registration Success
+→ Login
+→ Owner Dashboard
 
-## React Compiler
+## Owner rule
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Public registration does NOT expose a role selector.
 
-## Expanding the ESLint configuration
+Every public registration is created as:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+role = OWNER
+
+The Owner can then create stores and later assign/invite managers.
+
+## Demo
+
+Email:
+owner@intellimart.local
+
+Password:
+owner123
+
+## Run
+
+1. Install Node.js 18+.
+2. Extract the zip.
+3. Open a terminal in the project folder.
+4. Run:
+
+npm install
+npm run dev
+
+5. Open the localhost URL shown by Vite.
+
+## Important
+
+The current authentication is a localStorage mock so the whole frontend can be tested immediately without a backend.
+
+The code is intentionally separated into:
+- src/services/auth.js
+- src/services/store.js
+
+When your backend Modul 1 is ready, replace those service functions with fetch/axios calls to your API. The UI and routing can remain largely unchanged.
+
+## Reset local demo
+
+Open browser DevTools Console and run:
+
+localStorage.clear()
+location.reload()
