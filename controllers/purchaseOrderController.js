@@ -17,19 +17,25 @@ async function generatePONumber() {
 exports.getAllPOs = async (req, res) => {
   try {
     const { status } = req.query;
-    const store_id = req.user.store_id;   // Dari JWT
+    // Gunakan store_id dari JWT, atau fallback ke 1 jika tidak ditemukan
+    const store_id = req.user?.store_id || 1;
 
-    const where = { store_id };
+    const where = {};
+    if (store_id) where.store_id = store_id;
     if (status) where.status = status;
 
     const pos = await PurchaseOrder.findAll({
       where,
-      include: [{ model: Supplier, as: 'supplier' }],
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseOrderItem, as: 'items' } // Wajib di-include agar item PO muncul di tabel
+      ],
       order: [['created_at', 'DESC']]
     });
 
     res.json({ success: true, data: pos });
   } catch (err) {
+    console.error('Error getAllPOs Backend:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
@@ -157,22 +163,68 @@ exports.updateStatus = async (req, res) => {
 
 // ── PUT /api/purchase-orders/:id/receive ─────────────────────────────────
 exports.receivePO = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const store_id = req.user.store_id;
-    const po = await PurchaseOrder.findByPk(req.params.id);
-    if (!po) return res.status(404).json({ success: false, message: 'Purchase Order tidak ditemukan' });
+    const po_id = req.params.id; // Mengambil ID dari URL Parameter (:id)
+    const { po_detail_id, qty_received, items } = req.body;
+
+    const po = await PurchaseOrder.findByPk(po_id, { transaction: t });
+    if (!po) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Purchase Order tidak ditemukan' });
+    }
 
     if (po.store_id !== store_id) {
+      await t.rollback();
       return res.status(403).json({ success: false, message: 'Akses ditolak' });
     }
 
     if (po.status === 'cancelled') {
+      await t.rollback();
       return res.status(400).json({ success: false, message: 'PO yang dibatalkan tidak bisa diterima' });
     }
 
-    await po.update({ status: 'received' });
-    res.json({ success: true, message: 'Purchase Order berhasil diterima', data: po });
+    // 1. Update status tabel Header (tt_purchase_order)
+    await po.update({ status: 'RECEIVED' }, { transaction: t });
+
+    // 2. Update qty_received di tabel Detail (tt_purchase_order_detail)
+    if (po_detail_id && qty_received !== undefined) {
+      // Update item spesifik berdasarkan po_detail_id
+      await PurchaseOrderItem.update(
+        { qty_received: Number(qty_received) },
+        { where: { id: po_detail_id, po_id: po.po_id }, transaction: t }
+      );
+    } else if (items && Array.isArray(items) && items.length > 0) {
+      // Update jika dikirim array items
+      for (const item of items) {
+        await PurchaseOrderItem.update(
+          { qty_received: Number(item.qty_received || item.quantity) },
+          { where: { id: item.po_detail_id || item.id, po_id: po.po_id }, transaction: t }
+        );
+      }
+    } else {
+      // Fallback: Jika tidak mengirim ID detail, set qty_received = quantity untuk semua item PO ini
+      const poItems = await PurchaseOrderItem.findAll({ where: { po_id: po.po_id }, transaction: t });
+      for (const item of poItems) {
+        await item.update({ qty_received: item.quantity }, { transaction: t });
+      }
+    }
+
+    await t.commit();
+
+    // Fetch data terbaru untuk dikembalikan ke frontend
+    const updatedPO = await PurchaseOrder.findByPk(po.po_id, {
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseOrderItem, as: 'items' }
+      ]
+    });
+
+    res.json({ success: true, message: 'Purchase Order berhasil diterima', data: updatedPO });
   } catch (err) {
+    await t.rollback();
+    console.error('Error receivePO:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

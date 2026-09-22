@@ -10,6 +10,7 @@ const { sequelize } = require('./models');
 const productRoutes = require('./routes/products');
 const transactionRoutes = require('./routes/transactions');
 const poRoutes = require('./routes/purchaseOrder');
+const supplierRoutes = require('./routes/supplierRoutes'); // <-- 1. TAMBAHKAN IMPORT ROUTE SUPPLIER
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/po', poRoutes);
+app.use('/api/suppliers', supplierRoutes); // <-- 2. MOUNTING ROUTE SUPPLIER DI SINI
 
 const PORT = process.env.PORT || 5000;
 
