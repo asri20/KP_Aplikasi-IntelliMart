@@ -1,4 +1,36 @@
+import { useState } from 'react';
+
+import { useNavigate } from 'react-router-dom';
+
+import { useAuth } from '@features/auth/hooks';
+import { axiosClient } from '@shared/lib/api/axiosClient';
+import { ENDPOINTS } from '@shared/lib/api/endpoints';
+
+const ROLE_LABEL = { owner: 'Owner', manager: 'Manager', cashier: 'Kasir', admin: 'Owner' };
+
+const getInitial = (name = '') => name.trim().charAt(0).toUpperCase() || '?';
+
 const OwnerHeader = () => {
+  const navigate = useNavigate();
+  const { user, clearAuth } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const displayName = user?.name ?? 'Pengguna';
+  const role = String(user?.role ?? user?.role_name ?? '').toLowerCase();
+  const roleLabel = ROLE_LABEL[role] ?? 'Pengguna';
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // Hapus sesi di server (kalau gagal, tetap logout di browser)
+      await axiosClient.post(ENDPOINTS.AUTH.LOGOUT);
+    } catch {
+      /* abaikan */
+    }
+    clearAuth();
+    navigate('/login', { replace: true });
+  };
+
   return (
     <header className="flex h-20 items-center justify-between border-b border-orange-100 bg-white px-6 lg:px-8">
       {/* Search */}
@@ -27,19 +59,31 @@ const OwnerHeader = () => {
           </span>
         </button>
 
+        {/* Profil user yang login */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100">
-            👤
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+            {getInitial(displayName)}
           </div>
 
           <div className="hidden sm:block">
-            <p className="text-sm font-semibold text-slate-800">Owner</p>
+            <p className="max-w-[160px] truncate text-sm font-semibold text-slate-800">
+              {displayName}
+            </p>
 
-            <p className="text-xs text-slate-400">Administrator</p>
+            <p className="text-xs text-slate-400">{roleLabel}</p>
           </div>
-
-          <span className="text-slate-400">⌄</span>
         </div>
+
+        {/* Logout */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex items-center gap-2 rounded-xl border border-orange-200 px-4 py-2 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <span aria-hidden="true">⎋</span>
+          {isLoggingOut ? 'Keluar...' : 'Keluar'}
+        </button>
       </div>
     </header>
   );
