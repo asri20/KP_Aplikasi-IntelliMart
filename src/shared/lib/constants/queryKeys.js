@@ -10,6 +10,10 @@ export const QUERY_KEYS = Object.freeze({
   
   // Auth (placeholder untuk iterasi 2)
   AUTH_USER: ['auth', 'user'],
+
+   // Owner
+  STORES: ['stores'],
+  TEAM: ['team'],
   
   // Tenant (placeholder untuk iterasi 3)
   TENANT: ['tenant'],
