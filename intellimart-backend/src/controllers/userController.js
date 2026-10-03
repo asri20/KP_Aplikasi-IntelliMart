@@ -226,16 +226,7 @@ async function toggleUserStatus(req, res) {
   }
 }
 
-async function getPermissionsByRoleId(roleId){
-  const [rows]= await db.query(`
-    SELECT p.name
-    FROM tt_permission p
-    JOIN tt_role_ermission rp ON p.id = rp.permission_id
-    WHERE rp.role_id = ?
-  `, [roleId]);
 
-  return rows.map(row => row.name); //Mengembalikan array string misal: ['manage_users', 'view_reports']
-}
 
 
 module.exports = {
@@ -243,5 +234,4 @@ module.exports = {
   changePassword,
   getUsers,
   toggleUserStatus,
-  getPermissionsByRoleId
 };

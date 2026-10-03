@@ -8,11 +8,9 @@ router.post('/', verifyToken, checkOwner, userController.createUserByOwner);
 router.put('/change-password', verifyToken, userController.changePassword);
 
 // Route khusus Owner
-router.post('/', verifyToken, checkOwner, userController.createUserByOwner);
 router.get('/', verifyToken, checkOwner, userController.getUsers);
 router.patch('/:id/status', verifyToken, checkOwner, userController.toggleUserStatus);
 
-//hanya user yang rolenya punya permission 'manage_usesrs' yang bisa panggil route ini
 
 
 module.exports = router;
