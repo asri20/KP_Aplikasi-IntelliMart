@@ -27,9 +27,7 @@ const app = express();
 // CORS - Izinkan frontend React mengakses API
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: "http://localhost:3001",
   }),
 );
 

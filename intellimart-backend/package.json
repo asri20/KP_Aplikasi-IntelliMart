@@ -9,7 +9,7 @@
     "test": "echo \"No tests defined\" && exit 0"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "mysql2": "^3.23.3"
