@@ -19,11 +19,18 @@ const verifyToken = async (req, res, next) => {
     });
   }
 
+  let decoded;
   try {
-    // Verify token JWT
-    const decoded = jwt.verify(token, JWT_SECRET);
+    decoded = jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    console.log('JWT VERIFY ERROR:', error.name, '-', error.message);
+    return res.status(403).json({
+      success: false,
+      message: 'Token tidak valid atau sudah kadaluwarsa.'
+    });
+  }
 
-    // Optional: Pastikan user masih aktif di database
+  try {
     const user = await userModel.findByEmail(decoded.email);
     if (!user || user.is_active === 0) {
       return res.status(403).json({
@@ -32,14 +39,13 @@ const verifyToken = async (req, res, next) => {
       });
     }
 
-    // Simpan data user hasil decode ke object req agar bisa dipakai di controller berikutnya
     req.user = decoded;
-    next(); // Lanjut ke middleware / controller berikutnya
-
+    next();
   } catch (error) {
-    return res.status(403).json({
+    console.log('DB/USER CHECK ERROR:', error);
+    return res.status(500).json({
       success: false,
-      message: 'Token tidak valid atau sudah kadaluwarsa.'
+      message: 'Gagal memeriksa data user.'
     });
   }
 };
@@ -54,7 +60,7 @@ const checkOwner = (req, res, next) => {
   }
 
   // Cek apakah role_name adalah 'Owner' atau role_id = 1
-  if (req.user.role_name !== 'Owner' && req.user.role_id !== 1) {
+  if (req.user.role_name !== 'Owner' && Number(req.user.role_id) !== 1) {
     return res.status(403).json({
       success: false,
       message: 'Akses ditolak. Fitur ini hanya dapat diakses oleh Owner.'
