@@ -1,3 +1,4 @@
+
 import { NavLink } from 'react-router-dom';
 
 const menuItems = [
@@ -30,6 +31,11 @@ const menuItems = [
     label: 'Penjualan',
     icon: '🛒',
     path: '/penjualan',
+  },
+  {
+    label: 'Manajemen Manager',
+    icon: '♙',
+    path: '/manajemen-manager',
   },
   {
     label: 'Laporan',
@@ -69,7 +75,6 @@ const OwnerSidebar = () => {
             }
           >
             <span className="w-5 text-center text-lg">{item.icon}</span>
-
             {item.label}
           </NavLink>
         ))}
@@ -84,7 +89,6 @@ const OwnerSidebar = () => {
 
           <div>
             <p className="text-sm font-bold text-slate-800">Owner</p>
-
             <p className="text-xs text-slate-500">
               Akses penuh ke seluruh fitur
             </p>

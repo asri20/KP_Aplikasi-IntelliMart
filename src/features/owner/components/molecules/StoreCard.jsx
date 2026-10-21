@@ -6,7 +6,7 @@ import { Badge, Button } from '@shared/components/atoms';
  * StoreCard - Molecule
  * Kartu untuk satu toko di halaman "Toko Saya".
  */
-const StoreCard = ({ store }) => {
+const StoreCard = ({ store, onView }) => {
   const hasManager = Boolean(store.manager);
 
   return (
@@ -30,20 +30,19 @@ const StoreCard = ({ store }) => {
           🏬
         </div>
 
+        {/* Store name */}
         <h3 className="truncate text-base font-bold text-slate-900">
           {store.name}
         </h3>
 
+        {/* Store location */}
         <p className="mt-1 flex items-center gap-1 text-xs text-slate-400">
           <span>📍</span>
-          <span className="truncate">{store.location}</span>
+          <span className="truncate">{store.location || 'Lokasi belum diisi'}</span>
         </p>
 
         {/* Manager */}
-        <button
-          type="button"
-          className="mt-4 flex w-full items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5 text-left transition hover:bg-slate-50"
-        >
+        <div className="mt-4 flex w-full items-center justify-between rounded-xl border border-slate-100 bg-slate-50/60 px-3 py-2.5">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm">
               {hasManager ? '🧑' : '👤'}
@@ -63,13 +62,15 @@ const StoreCard = ({ store }) => {
           </div>
 
           <span className="shrink-0 text-slate-300">›</span>
-        </button>
+        </div>
 
         {/* Stats */}
-        <div className="mt-4 flex items-center gap-5 text-xs text-slate-500">
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
           <span className="flex items-center gap-1.5">
             📦
-            <b className="font-semibold text-slate-700">{store.totalProduk}</b>
+            <b className="font-semibold text-slate-700">
+              {store.totalProduk}
+            </b>
             Total Produk
           </span>
 
@@ -90,7 +91,12 @@ const StoreCard = ({ store }) => {
             </Button>
           )}
 
-          <Button variant="outline" size="sm" fullWidth>
+          <Button
+            variant="outline"
+            size="sm"
+            fullWidth
+            onClick={onView}
+          >
             Lihat Detail →
           </Button>
         </div>
@@ -101,12 +107,20 @@ const StoreCard = ({ store }) => {
 
 StoreCard.propTypes = {
   store: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     name: PropTypes.string.isRequired,
-    location: PropTypes.string.isRequired,
+    location: PropTypes.string,
     manager: PropTypes.string,
-    totalProduk: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-    totalTransaksi: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    totalProduk: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+    ]).isRequired,
+    totalTransaksi: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+    ]).isRequired,
   }).isRequired,
+  onView: PropTypes.func.isRequired,
 };
 
 export default StoreCard;

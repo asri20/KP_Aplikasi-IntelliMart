@@ -4,3 +4,4 @@ export { default as SalesChart } from './SalesChart';
 export { default as CategoryChart } from './CategoryChart';
 export { default as ProductTable } from './ProductTable';
 export { default as CreateStoreModal } from './CreateStoreModal';
+export { default as CreateProductModal } from './CreateProductModal';

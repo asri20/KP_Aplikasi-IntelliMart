@@ -14,6 +14,7 @@ export const QUERY_KEYS = Object.freeze({
    // Owner
   STORES: ['stores'],
   TEAM: ['team'],
+  PRODUCTS: ['products'],
   
   // Tenant (placeholder untuk iterasi 3)
   TENANT: ['tenant'],

@@ -4,8 +4,7 @@ import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '
 import LandingPage from '@features/landing/pages/LandingPage';
 
 import { ProtectedRoute, PublicRoute } from '@core/auth';
-import { DashboardPage, TokoSayaPage, ProdukPage } from '@features/owner/pages';
-
+import { DashboardPage, TokoSayaPage, ProdukPage, InventoryPage,  ManajemenManagerPage, StoreDetailPage } from '@features/owner/pages';
 function AppRouter() {
   return (
     <BrowserRouter>
@@ -64,6 +63,15 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+         path="/toko-saya/:storeId"
+         element={
+           <ProtectedRoute>
+           <StoreDetailPage />
+            </ProtectedRoute>
+         }
+        />
         <Route
           path="/produk"
           element={
@@ -72,6 +80,25 @@ function AppRouter() {
             </ProtectedRoute>
           }
         />
+        
+        <Route
+          path="/inventory"
+          element={
+            <ProtectedRoute>
+              <InventoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+        path="/manajemen-manager"
+        element={
+          <ProtectedRoute>
+            <ManajemenManagerPage />
+          </ProtectedRoute>
+        }
+      />
+
 
         {/* 404 */}
         <Route
