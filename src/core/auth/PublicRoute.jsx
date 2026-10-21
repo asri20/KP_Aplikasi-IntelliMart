@@ -3,20 +3,24 @@ import { Navigate } from 'react-router-dom';
 
 import { useAuth } from '@features/auth/hooks';
 
-/**
- * Public Route Component
- * Redirects authenticated users to dashboard
- *
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- * @param {string} [props.redirectTo='/dashboard'] - Redirect path
- */
-function PublicRoute({ children, redirectTo = '/dashboard' }) {
-  const { isAuthenticated } = useAuth();
+function PublicRoute({ children, redirectTo }) {
+  const { isAuthenticated, user } = useAuth();
 
-  // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+    const role = (
+      user?.role ||
+      user?.role_name ||
+      ''
+    )
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    const destination =
+      redirectTo ||
+      (role === 'manager' ? '/manager/dashboard' : '/dashboard');
+
+    return <Navigate to={destination} replace />;
   }
 
   return children;

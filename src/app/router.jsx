@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@features/auth/pages';
 import LandingPage from '@features/landing/pages/LandingPage';
+import ManagerDashboardPage from '@features/manager/pages/ManagerDashboardPage';
 
 import { ProtectedRoute, PublicRoute } from '@core/auth';
 import { DashboardPage, TokoSayaPage, ProdukPage, InventoryPage,  ManajemenManagerPage, StoreDetailPage } from '@features/owner/pages';
@@ -54,6 +55,14 @@ function AppRouter() {
               <DashboardPage />
             </ProtectedRoute>
           }
+        />
+        <Route
+        path="/manager/dashboard"
+        element={
+          <ProtectedRoute>
+            <ManagerDashboardPage />
+          </ProtectedRoute>
+        }
         />
         <Route
           path="/toko-saya"
