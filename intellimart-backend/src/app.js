@@ -19,6 +19,7 @@ const unitConversionRoutes = require("./routes/unitConversionRoutes");
 const productImageRoutes = require("./routes/productImageRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const storeStaffRoutes = require('./routes/storeStaffRoutes');
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use("/api/unit-conversions", unitConversionRoutes);
 app.use("/api/product-images", productImageRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/store-staff", storeStaffRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

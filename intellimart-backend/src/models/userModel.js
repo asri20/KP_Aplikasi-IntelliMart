@@ -29,22 +29,54 @@ async function findByIdentity(identity) {
 
 async function findById(id) {
   const [rows] = await db.query(
-    "SELECT id, name, email, phone, role_id, is_active FROM tm_users WHERE id = ? LIMIT 1",
+    `SELECT
+       id, name, email, password, phone,
+       role_id, created_by_owner_id, is_active
+     FROM tm_users
+     WHERE id = ?
+     LIMIT 1`,
     [id]
   );
+
   return rows[0] || null;
 }
 
+
 async function createUser(userData) {
-  const { name, email, password, phone, role_id, is_active } = userData;
+  const {
+    name,
+    email,
+    password,
+    phone,
+    role_id,
+    is_active,
+    created_by_owner_id
+  } = userData;
+
   const [result] = await db.query(
     `INSERT INTO tm_users
-      (name, email, password, phone, role_id, is_active, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-    [name, email, password, phone || null, role_id, is_active ?? 1]
+      (
+        name, email, password, phone, role_id,
+        created_by_owner_id, is_active, created_at, updated_at
+      )
+     VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+    [
+      name,
+      email,
+      password,
+      phone || null,
+      role_id,
+      created_by_owner_id,
+      is_active ?? 1
+    ]
   );
-  return { id: result.insertId, ...userData };
+
+  return {
+    id: result.insertId,
+    ...userData
+  };
 }
+
 
 async function updatePassword(id, newHashedPassword) {
   const [result] = await db.query(
@@ -54,13 +86,25 @@ async function updatePassword(id, newHashedPassword) {
   return result.affectedRows > 0;
 }
 
-async function getAllUsers() {
-  const [rows] = await db.query(`
-    SELECT u.id, u.name, u.email, u.phone, u.is_active, r.role_name, u.created_at
-    FROM tm_users u
-    JOIN tm_roles r ON u.role_id = r.id
-    ORDER BY u.id DESC
-  `);
+
+async function getAllUsers(ownerId) {
+  const [rows] = await db.query(
+    `SELECT
+       u.id,
+       u.name,
+       u.email,
+       u.phone,
+       u.is_active,
+       r.role_name,
+       u.created_at
+     FROM tm_users u
+     JOIN tm_roles r ON u.role_id = r.id
+     WHERE u.created_by_owner_id = ?
+       AND LOWER(r.role_name) IN ('manager', 'cashier')
+     ORDER BY u.id DESC`,
+    [ownerId]
+  );
+
   return rows;
 }
 

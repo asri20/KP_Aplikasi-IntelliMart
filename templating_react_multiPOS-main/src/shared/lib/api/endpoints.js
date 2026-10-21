@@ -1,3 +1,4 @@
+
 /**
  * API Endpoints
  * Centralized endpoint definitions
@@ -22,14 +23,21 @@ export const ENDPOINTS = Object.freeze({
     ME: '/auth/me',
   },
 
-  // User
+  // User profile
   USER: {
     PROFILE: '/user/profile',
     UPDATE: '/user/update',
-    CHANGE_PASSWORD: '/user/change-password',
+    CHANGE_PASSWORD: '/users/change-password',
   },
 
-  // Tenant (placeholder untuk iterasi 3)
+  // Owner: account management
+  OWNER_USERS: {
+    LIST: '/users',
+    CREATE: '/users',
+    UPDATE_STATUS: (id) => `/users/${id}/status`,
+  },
+
+  // Tenant
   TENANT: {
     LIST: '/tenants',
     DETAIL: (id) => `/tenants/${id}`,
@@ -38,7 +46,7 @@ export const ENDPOINTS = Object.freeze({
     DELETE: (id) => `/tenants/${id}`,
   },
 
-  // Outlets (placeholder untuk iterasi 3)
+  // Outlets
   OUTLET: {
     LIST: '/outlets',
     DETAIL: (id) => `/outlets/${id}`,
@@ -46,5 +54,13 @@ export const ENDPOINTS = Object.freeze({
     UPDATE: (id) => `/outlets/${id}`,
     DELETE: (id) => `/outlets/${id}`,
   },
-});
 
+  
+  // // Stores
+  // STORES: {
+  //   LIST: '/stores',
+  //   CREATE: '/stores',
+  //   ASSIGN_MANAGER: '/stores/assign-manager',
+  // },
+
+});

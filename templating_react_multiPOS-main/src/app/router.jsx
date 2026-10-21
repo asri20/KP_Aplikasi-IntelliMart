@@ -1,31 +1,25 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage } from '@features/auth/pages';
+import {
+  LoginPage,
+  RegisterPage,
+  ForgotPasswordPage,
+  ResetPasswordPage,
+} from '@features/auth/pages';
+
 import LandingPage from '@features/landing/pages/LandingPage';
 
 import { ProtectedRoute, PublicRoute } from '@core/auth';
 
+import { DashboardPage, TokoSayaPage, ProdukPage } from '@features/owner/pages';
 
-// Placeholder Dashboard
-const DashboardPage = () => {
-  const handleLogout = () => {
-    // Clear auth and redirect
-    localStorage.clear();
-    window.location.href = '/login';
-  };
-
-  return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-4">Dashboard</h1>
-        <p className="text-zinc-600 dark:text-zinc-400 mb-4">Welcome to the dashboard! (Placeholder for Iterasi 3)</p>
-        <button onClick={handleLogout} className="px-4 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors">
-          Logout
-        </button>
-      </div>
-    </div>
-  );
-};
+import ManagerDashboardPage from '@features/manager/pages/ManagerDashboardPage';
+import ManagerInventoryPage from '@features/manager/pages/ManagerInventoryPage';
+import ManagerProductsPage from '@features/manager/pages/ManagerProductsPage';
+import ManagerReportsPage from '@features/manager/pages/ManagerReportsPage';
+import ManagerSalesPage from '@features/manager/pages/ManagerSalesPage';
+import ManagerStaffPage from '@features/manager/pages/ManagerStaffPage';
+import KelolaAkunPage from '@features/owner/pages/KelolaAkunPage';
 
 function AppRouter() {
   return (
@@ -34,7 +28,7 @@ function AppRouter() {
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Auth Routes (redirect if authenticated) */}
+        {/* Auth Routes */}
         <Route
           path="/login"
           element={
@@ -43,6 +37,7 @@ function AppRouter() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/register"
           element={
@@ -51,6 +46,7 @@ function AppRouter() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/forgot-password"
           element={
@@ -59,6 +55,7 @@ function AppRouter() {
             </PublicRoute>
           }
         />
+
         <Route
           path="/reset-password"
           element={
@@ -68,7 +65,8 @@ function AppRouter() {
           }
         />
 
-        {/* Protected Routes */}
+        {/* ==================== OWNER ==================== */}
+
         <Route
           path="/dashboard"
           element={
@@ -78,18 +76,94 @@ function AppRouter() {
           }
         />
 
+        <Route
+          path="/toko-saya"
+          element={
+            <ProtectedRoute>
+              <TokoSayaPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/produk"
+          element={
+            <ProtectedRoute>
+              <ProdukPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/kelola-akun"
+          element={
+            <ProtectedRoute>
+              <KelolaAkunPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ==================== MANAGER ==================== */}
+
+        <Route
+          path="/manager/dashboard"
+          element={
+            <ProtectedRoute>
+              <ManagerDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/products"
+          element={
+            <ProtectedRoute>
+              <ManagerProductsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/inventory"
+          element={
+            <ProtectedRoute>
+              <ManagerInventoryPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/sales"
+          element={
+            <ProtectedRoute>
+              <ManagerSalesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/reports"
+          element={
+            <ProtectedRoute>
+              <ManagerReportsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/manager/staff"
+          element={
+            <ProtectedRoute>
+              <ManagerStaffPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* 404 */}
         <Route
           path="*"
           element={
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-6xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">404</h1>
-                <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-8">Halaman tidak ditemukan</p>
-                <a href="/" className="text-brand-600 dark:text-brand-400 hover:underline">
-                  Kembali ke Beranda
-                </a>
-              </div>
+            <div className="flex min-h-screen items-center justify-center">
+              <h1 className="text-2xl font-bold">404 - Page Not Found</h1>
             </div>
           }
         />
@@ -99,4 +173,3 @@ function AppRouter() {
 }
 
 export default AppRouter;
-

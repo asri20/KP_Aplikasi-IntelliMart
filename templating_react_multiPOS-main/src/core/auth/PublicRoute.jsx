@@ -1,30 +1,36 @@
-import PropTypes from 'prop-types';
-import { Navigate } from 'react-router-dom';
 
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@features/auth/hooks';
 
-/**
- * Public Route Component
- * Redirects authenticated users to dashboard
- *
- * @param {Object} props - Component props
- * @param {React.ReactNode} props.children - Child components
- * @param {string} [props.redirectTo='/dashboard'] - Redirect path
- */
-function PublicRoute({ children, redirectTo = '/dashboard' }) {
-  const { isAuthenticated } = useAuth();
+function PublicRoute({ children }) {
+  const { isAuthenticated, user, isLoading } = useAuth();
 
-  // Redirect to dashboard if already authenticated
-  if (isAuthenticated) {
-    return <Navigate to={redirectTo} replace />;
+  if (isLoading) {
+    return null;
   }
 
+  // Jika belum login, izinkan membuka Login dan Register.
+  if (!isAuthenticated) {
+    return children;
+  }
+
+  // Jika sudah login, arahkan sesuai role.
+  const role = String(user?.role || '').toLowerCase();
+
+  if (role === 'manager') {
+    return <Navigate to="/manager/dashboard" replace />;
+  }
+
+  if (role === 'cashier') {
+    return <Navigate to="/kasir/dashboard" replace />;
+  }
+
+  if (role === 'owner') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // Role tidak dikenal: jangan paksa masuk dashboard Owner.
   return children;
 }
-
-PublicRoute.propTypes = {
-  children: PropTypes.node.isRequired,
-  redirectTo: PropTypes.string,
-};
 
 export default PublicRoute;

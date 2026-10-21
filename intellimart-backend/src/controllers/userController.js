@@ -51,14 +51,17 @@ async function createUserByOwner(req, res) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 6. Simpan user baru ke database
-    const newUser = await userModel.createUser({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      role_id: roleData.id,
-      is_active: 1
-    });
+    
+const newUser = await userModel.createUser({
+  name,
+  email,
+  password: hashedPassword,
+  phone,
+  role_id: roleData.id,
+  created_by_owner_id: req.user.id,
+  is_active: 1
+});
+
 
     // 📝 7. Catat aktivitas pembuatan user baru ke tt_activity_log
     await logActivity(req.user.id, 'CREATE_USER', 'tm_users', newUser.id);
@@ -154,22 +157,26 @@ async function changePassword(req, res) {
 // ========================================================
 // GET ALL USERS (Khusus Owner)
 // ========================================================
+
 async function getUsers(req, res) {
   try {
-    const users = await userModel.getAllUsers();
+    const users = await userModel.getAllUsers(req.user.id);
+
     return res.status(200).json({
       success: true,
-      message: 'Berhasil mengambil daftar user',
+      message: 'Berhasil mengambil daftar akun staff.',
       data: users
     });
   } catch (error) {
     console.error('Error Get Users:', error);
+
     return res.status(500).json({
       success: false,
       message: 'Terjadi kesalahan server saat mengambil data user.'
     });
   }
 }
+
 
 // ========================================================
 // TOGGLE USER STATUS (Khusus Owner)
