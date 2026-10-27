@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import ManagerSidebar from '../components/organisms/ManagerSidebar';
 import ManagerHeader from '../components/organisms/ManagerHeader';
 
@@ -250,7 +250,7 @@ const ManagerStaffPage = () => {
               {/* Search */}
               <div className="relative w-full lg:max-w-md">
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  🔍
+                  ≡ƒöì
                 </span>
 
                 <input
@@ -494,7 +494,7 @@ const ManagerStaffPage = () => {
             {filteredCashiers.length === 0 && (
               <div className="px-6 py-12 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                  🔍
+                  ≡ƒöì
                 </div>
 
                 <h3 className="mt-4 text-sm font-semibold text-gray-900">
@@ -546,7 +546,7 @@ const ManagerStaffPage = () => {
                 onClick={() => setSelectedCashier(null)}
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
               >
-                ×
+                ├ù
               </button>
             </div>
 

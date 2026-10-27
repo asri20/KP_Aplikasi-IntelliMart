@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 
 import ManagerSidebar from '../components/organisms/ManagerSidebar';
 import ManagerHeader from '../components/organisms/ManagerHeader';
@@ -509,7 +509,7 @@ const ManagerSalesPage = () => {
                 className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
                 aria-label="Tutup detail transaksi"
               >
-                ×
+                ├ù
               </button>
             </div>
 

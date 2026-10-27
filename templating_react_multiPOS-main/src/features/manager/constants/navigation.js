@@ -1,4 +1,4 @@
-export const managerMenu = [
+﻿export const managerMenu = [
   {
     label: 'Dashboard',
     path: '/manager/dashboard',

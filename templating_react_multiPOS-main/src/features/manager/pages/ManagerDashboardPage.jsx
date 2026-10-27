@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import ManagerSidebar from '../components/organisms/ManagerSidebar';
 import ManagerHeader from '../components/organisms/ManagerHeader';
 
@@ -277,7 +277,7 @@ const ManagerDashboardPage = () => {
                   href="/manager/staff"
                   className="text-sm font-semibold text-brand-500 transition hover:text-brand-600"
                 >
-                  Lihat semua kasir →
+                  Lihat semua kasir ΓåÆ
                 </a>
               </div>
             </section>
@@ -351,7 +351,7 @@ const ManagerDashboardPage = () => {
                 href="/manager/inventory"
                 className="text-sm font-semibold text-brand-500 transition hover:text-brand-600"
               >
-                Lihat inventory →
+                Lihat inventory ΓåÆ
               </a>
             </div>
 
