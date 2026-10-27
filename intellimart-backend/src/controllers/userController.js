@@ -8,9 +8,16 @@ const { logActivity } = require('../helpers/loggerHelper'); // ✅ 1. Import hel
 // ========================================================
 async function createUserByOwner(req, res) {
   try {
-    const { name, email, password, phone, role_name } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone,
+      role_name,
+      store_id
+    } = req.body;
 
-    // 1. Validasi input
+    // 1. Validasi input dasar
     if (!name || !email || !password || !phone || !role_name) {
       return res.status(400).json({
         success: false,
@@ -18,10 +25,13 @@ async function createUserByOwner(req, res) {
       });
     }
 
-    // 2. Batasi role yang boleh dibuat oleh Owner (Hanya Manager & Cashier)
-    const allowedRoles = ['Manager', 'Cashier'];
-    const formattedRole = role_name.charAt(0).toUpperCase() + role_name.slice(1).toLowerCase();
+    // 2. Format string role agar konsisten (Capitalize)
+    const formattedRole =
+      role_name.charAt(0).toUpperCase() +
+      role_name.slice(1).toLowerCase();
 
+    // 3. Tolak role selain Manager dan Cashier
+    const allowedRoles = ['Manager', 'Cashier'];
     if (!allowedRoles.includes(formattedRole)) {
       return res.status(400).json({
         success: false,
@@ -29,8 +39,72 @@ async function createUserByOwner(req, res) {
       });
     }
 
-    // 3. Cek apakah email sudah terdaftar
+    // 4. Logika Pembuatan Akun Cashier
+    if (formattedRole === 'Cashier') {
+      const existingCashier = await userModel.findByEmail(email);
+
+      if (existingCashier) {
+        return res.status(409).json({
+          success: false,
+          message: 'Email sudah terdaftar.'
+        });
+      }
+
+      const cashierRole = await userModel.findRoleByName('Cashier');
+
+      if (!cashierRole) {
+        return res.status(500).json({
+          success: false,
+          message: 'Role Cashier tidak ditemukan di database.'
+        });
+      }
+
+      const hashedCashierPassword = await bcrypt.hash(password, 10);
+
+      const newCashier = await userModel.createUser({
+        name,
+        email,
+        password: hashedCashierPassword,
+        phone,
+        role_id: cashierRole.id,
+        is_active: 1
+      });
+
+      await logActivity(
+        req.user.id,
+        'CREATE_USER',
+        'tm_users',
+        newCashier.id
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Berhasil membuat akun Cashier.',
+        data: {
+          id: newCashier.id,
+          name: newCashier.name,
+          email: newCashier.email,
+          phone: newCashier.phone,
+          role_id: cashierRole.id,
+          role_name: 'Cashier',
+          is_active: 1
+        }
+      });
+    }
+
+    // 5. Logika Pembuatan Akun Manager (Wajib ditugaskan ke toko)
+    const storeId = Number(store_id);
+
+    if (!Number.isInteger(storeId) || storeId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Pilih toko yang valid untuk Manager.'
+      });
+    }
+
+    // Cek email sebelum membuat akun
     const existingUser = await userModel.findByEmail(email);
+
     if (existingUser) {
       return res.status(409).json({
         success: false,
@@ -38,54 +112,65 @@ async function createUserByOwner(req, res) {
       });
     }
 
-    // 4. Cari ID Role di tm_roles secara dinamis
-    const roleData = await userModel.findRoleByName(formattedRole);
+    const roleData = await userModel.findRoleByName('Manager');
+
     if (!roleData) {
       return res.status(500).json({
         success: false,
-        message: `Role ${formattedRole} tidak ditemukan di database.`
+        message: 'Role Manager tidak ditemukan di database.'
       });
     }
 
-    // 5. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 6. Simpan user baru ke database
-    
-const newUser = await userModel.createUser({
-  name,
-  email,
-  password: hashedPassword,
-  phone,
-  role_id: roleData.id,
-  created_by_owner_id: req.user.id,
-  is_active: 1
-});
 
 
-    // 📝 7. Catat aktivitas pembuatan user baru ke tt_activity_log
-    await logActivity(req.user.id, 'CREATE_USER', 'tm_users', newUser.id);
+// Buat Manager dan hubungkan ke toko milik Owner
+const newManager = await userModel.createManagerForStore(
+  {
+    name,
+    email,
+    password: hashedPassword,
+    phone,
+    role_id: roleData.id
+  },
+  storeId,
+  req.user.id
+);
 
-    // 8. Response sukses
+
+    await logActivity(
+      req.user.id,
+      'CREATE_USER',
+      'tm_users',
+      newManager.id
+    );
+
+    await logActivity(
+      req.user.id,
+      'ASSIGN_MANAGER',
+      'tm_store',
+      storeId
+    );
+
     return res.status(201).json({
       success: true,
-      message: `Berhasil membuat akun ${formattedRole}`,
+      message: 'Akun Manager berhasil dibuat dan ditugaskan ke toko.',
       data: {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        phone: newUser.phone,
-        role_id: roleData.id,
-        role_name: formattedRole,
-        is_active: 1
+        ...newManager,
+        role_name: 'Manager',
+        store_id: storeId
       }
     });
 
   } catch (error) {
     console.error('Error Create User by Owner:', error);
-    return res.status(500).json({
+
+    return res.status(error.statusCode || 500).json({
       success: false,
-      message: 'Terjadi kesalahan server saat membuat user.'
+      message: error.statusCode
+        ? error.message
+        : 'Terjadi kesalahan server saat membuat user.'
     });
   }
 }
@@ -155,94 +240,86 @@ async function changePassword(req, res) {
 }
 
 // ========================================================
-// GET ALL USERS (Khusus Owner)
+// GET MANAGERS BERDASARKAN TOKO MILIK OWNER
 // ========================================================
-
 async function getUsers(req, res) {
   try {
-    const users = await userModel.getAllUsers(req.user.id);
+    const users = await userModel.getManagersByOwnerId(req.user.id);
 
     return res.status(200).json({
       success: true,
-      message: 'Berhasil mengambil daftar akun staff.',
+      message: 'Berhasil mengambil daftar Manager toko Anda.',
       data: users
     });
   } catch (error) {
-    console.error('Error Get Users:', error);
-
+    console.error('Error Get Managers:', error);
     return res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan server saat mengambil data user.'
+      message: 'Terjadi kesalahan server saat mengambil data Manager.'
     });
   }
 }
 
-
 // ========================================================
-// TOGGLE USER STATUS (Khusus Owner)
+// TOGGLE STATUS MANAGER MILIK OWNER
 // ========================================================
 async function toggleUserStatus(req, res) {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
     const { is_active } = req.body;
 
-    // Validasi input status
-    if (is_active === undefined || (is_active !== 0 && is_active !== 1)) {
+    if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({
         success: false,
-        message: 'Field is_active wajib diisi dengan nilai 1 (aktif) atau 0 (nonaktif).'
+        message: 'ID user tidak valid.'
       });
     }
 
-    // Mencegah Owner menonaktifkan dirinya sendiri
-    if (parseInt(id) === req.user.id) {
+    if (is_active !== 0 && is_active !== 1) {
       return res.status(400).json({
         success: false,
-        message: 'Anda tidak dapat menonaktifkan akun Owner Anda sendiri.'
+        message: 'Field is_active wajib bernilai 1 atau 0.'
       });
     }
 
-    // Cek keberadaan user
-    const user = await userModel.findById(id);
-    if (!user) {
-      return res.status(404).json({
+    // Ambil Manager yang ditugaskan ke toko milik Owner login
+    const managers = await userModel.getManagersByOwnerId(req.user.id);
+    const manager = managers.find(user => Number(user.id) === id);
+
+    // Tolak jika Manager bukan bagian dari toko Owner ini
+    if (!manager) {
+      return res.status(403).json({
         success: false,
-        message: 'User tidak ditemukan.'
+        message: 'Anda tidak memiliki akses untuk mengubah status Manager ini.'
       });
     }
 
-    // Update status di database
     await userModel.updateStatus(id, is_active);
 
-    // 📝 Catat aktivitas toggle status ke tt_activity_log
-    const actionName = is_active === 1 ? 'ACTIVATE_USER' : 'DEACTIVATE_USER';
+    const actionName = is_active === 1
+      ? 'ACTIVATE_USER'
+      : 'DEACTIVATE_USER';
+
     await logActivity(req.user.id, actionName, 'tm_users', id);
 
-    const statusText = is_active === 1 ? 'diaktifkan' : 'dinonaktifkan';
+    const statusText = is_active === 1
+      ? 'diaktifkan'
+      : 'dinonaktifkan';
+
     return res.status(200).json({
       success: true,
-      message: `User ${user.name} berhasil ${statusText}.`
+      message: `Manager ${manager.name} berhasil ${statusText}.`
     });
-
   } catch (error) {
-    console.error('Error Toggle Status:', error);
+    console.error('Error Toggle Manager Status:', error);
     return res.status(500).json({
       success: false,
-      message: 'Terjadi kesalahan server saat mengubah status user.'
+      message: 'Terjadi kesalahan server saat mengubah status Manager.'
     });
   }
 }
 
-async function getPermissionsByRoleId(roleId){
-  const [rows]= await db.query(`
-    SELECT p.name
-    FROM tt_permission p
-    JOIN tt_role_ermission rp ON p.id = rp.permission_id
-    WHERE rp.role_id = ?
-  `, [roleId]);
 
-  return rows.map(row => row.name); //Mengembalikan array string misal: ['manage_users', 'view_reports']
-}
 
 
 module.exports = {
@@ -250,5 +327,4 @@ module.exports = {
   changePassword,
   getUsers,
   toggleUserStatus,
-  getPermissionsByRoleId
 };

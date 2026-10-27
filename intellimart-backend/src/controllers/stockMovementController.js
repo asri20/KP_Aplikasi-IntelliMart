@@ -1,26 +1,135 @@
-// src/controllers/stockMovementController.js
-// Controller untuk modul Pergerakan Stok
 
 const StockMovementModel = require('../models/stockMovementModel');
 const StoreModel = require('../models/storeModel');
 const VariantModel = require('../models/variantModel');
 const SupplierModel = require('../models/supplierModel');
-const UserModel = require('../models/userModel');
 
-const VALID_MOVEMENT_TYPES = ['IN', 'OUT', 'ADJUSTMENT_IN', 'ADJUSTMENT_OUT'];
-const VALID_REFERENCE_TYPES = ['PURCHASE', 'SALE', 'ADJUSTMENT', 'TRANSFER', 'INITIAL', 'RETURN'];
+const VALID_MOVEMENT_TYPES = [
+  'IN',
+  'OUT',
+  'ADJUSTMENT_IN',
+  'ADJUSTMENT_OUT'
+];
+
+const VALID_REFERENCE_TYPES = [
+  'PURCHASE',
+  'SALE',
+  'ADJUSTMENT',
+  'TRANSFER',
+  'INITIAL',
+  'RETURN'
+];
+
 const OUTGOING_TYPES = ['OUT', 'ADJUSTMENT_OUT'];
 
-const StockMovementController = {
+const isPositiveInteger = (value) =>
+  Number.isSafeInteger(Number(value)) && Number(value) > 0;
 
-  /**
-   * GET /api/stock-movements
-   * GET /api/stock-movements?store_id=1&variant_id=1
-   */
+const isValidQty = (value) =>
+  value !== undefined &&
+  value !== null &&
+  value !== '' &&
+  Number.isFinite(Number(value)) &&
+  Number(value) > 0;
+
+const getAccessibleStores = async (user) => {
+  const userId = Number(user?.id);
+  const roleId = Number(user?.role_id);
+  const roleName = String(user?.role_name || '').toLowerCase();
+
+  if (!isPositiveInteger(userId)) {
+    return [];
+  }
+
+  // Owner: hanya toko yang dimilikinya.
+  if (roleId === 1 || roleName === 'owner') {
+    return StoreModel.findByOwnerId(userId);
+  }
+
+  // Manager: hanya toko yang ditugaskan kepadanya.
+  if (roleName === 'manager') {
+    const store = await StoreModel.findByManagerId(userId);
+    return store ? [store] : [];
+  }
+
+  return [];
+};
+
+const getAuthorizedStore = async (user, storeId) => {
+  if (!isPositiveInteger(storeId)) {
+    return { error: 'ID toko tidak valid', status: 400 };
+  }
+
+  const store = await StoreModel.findById(Number(storeId));
+
+  if (!store) {
+    return { error: 'Toko tidak ditemukan', status: 404 };
+  }
+
+  const accessibleStores = await getAccessibleStores(user);
+  const allowed = accessibleStores.some(
+    (item) => Number(item.id) === Number(store.id)
+  );
+
+  if (!allowed) {
+    return {
+      error: 'Anda tidak memiliki akses ke toko ini',
+      status: 403
+    };
+  }
+
+  return { store };
+};
+
+const StockMovementController = {
+  // GET /api/stock-movements?store_id=1&variant_id=1
   getAll: async (req, res) => {
     try {
       const { store_id, variant_id } = req.query;
-      const data = await StockMovementModel.findAll(store_id, variant_id);
+
+      if (variant_id && !isPositiveInteger(variant_id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'variant_id tidak valid'
+        });
+      }
+
+      let stores;
+
+      if (store_id) {
+        const result = await getAuthorizedStore(req.user, store_id);
+
+        if (result.error) {
+          return res.status(result.status).json({
+            success: false,
+            message: result.error
+          });
+        }
+
+        stores = [result.store];
+      } else {
+        stores = await getAccessibleStores(req.user);
+      }
+
+      if (!stores.length) {
+        return res.status(403).json({
+          success: false,
+          message: 'Tidak ada toko yang dapat Anda akses'
+        });
+      }
+
+      const results = await Promise.all(
+        stores.map((store) =>
+          StockMovementModel.findAll(store.id, variant_id)
+        )
+      );
+
+      const data = results
+        .flat()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at || 0) - new Date(a.created_at || 0)
+        );
 
       return res.status(200).json({
         success: true,
@@ -30,128 +139,188 @@ const StockMovementController = {
       });
     } catch (error) {
       console.error('StockMovementController.getAll error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal mengambil data pergerakan stok', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal mengambil data pergerakan stok'
+      });
     }
   },
 
-  /**
-   * GET /api/stock-movements/:id
-   */
+  // GET /api/stock-movements/:id
   getById: async (req, res) => {
     try {
       const { id } = req.params;
-      if (isNaN(id)) {
-        return res.status(400).json({ success: false, message: 'ID pergerakan stok tidak valid' });
+
+      if (!isPositiveInteger(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID pergerakan stok tidak valid'
+        });
       }
 
-      const data = await StockMovementModel.findById(id);
+      const data = await StockMovementModel.findById(Number(id));
+
       if (!data) {
-        return res.status(404).json({ success: false, message: `Pergerakan stok dengan ID ${id} tidak ditemukan` });
+        return res.status(404).json({
+          success: false,
+          message: 'Pergerakan stok tidak ditemukan'
+        });
       }
 
-      return res.status(200).json({ success: true, message: 'Data pergerakan stok berhasil diambil', data });
+      const result = await getAuthorizedStore(req.user, data.store_id);
+
+      if (result.error) {
+        return res.status(result.status).json({
+          success: false,
+          message: result.error
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Data pergerakan stok berhasil diambil',
+        data
+      });
     } catch (error) {
       console.error('StockMovementController.getById error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal mengambil data pergerakan stok', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal mengambil data pergerakan stok'
+      });
     }
   },
 
-  /**
-   * POST /api/stock-movements
-   *
-   * CATATAN: created_by WAJIB dikirim manual di body untuk saat ini (mis. id user yang login),
-   * karena Modul Auth belum ada. Nanti kalau Modul Auth sudah jadi, ini akan diambil otomatis
-   * dari token login, bukan dari body.
-   */
+  // POST /api/stock-movements
   create: async (req, res) => {
     try {
       const {
-        store_id, variant_id, movement_type, qty,
-        reference_type, reference_id, supplier_id, note, created_by
+        store_id,
+        variant_id,
+        movement_type,
+        qty,
+        reference_type,
+        reference_id,
+        supplier_id,
+        note
       } = req.body;
 
-      // --- Validasi field wajib ---
-      if (!store_id) {
-        return res.status(400).json({ success: false, message: 'store_id wajib diisi' });
+      if (!isPositiveInteger(store_id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'store_id wajib diisi dengan ID yang valid'
+        });
       }
-      if (!variant_id) {
-        return res.status(400).json({ success: false, message: 'variant_id wajib diisi' });
+
+      if (!isPositiveInteger(variant_id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'variant_id wajib diisi dengan ID yang valid'
+        });
       }
-      if (!movement_type) {
-        return res.status(400).json({ success: false, message: 'movement_type wajib diisi' });
-      }
+
       if (!VALID_MOVEMENT_TYPES.includes(movement_type)) {
         return res.status(400).json({
           success: false,
           message: `movement_type harus salah satu dari: ${VALID_MOVEMENT_TYPES.join(', ')}`
         });
       }
-      if (qty === undefined || qty === null || isNaN(qty) || Number(qty) <= 0) {
-        return res.status(400).json({ success: false, message: 'qty wajib diisi dan harus lebih besar dari 0' });
+
+      if (!isValidQty(qty)) {
+        return res.status(400).json({
+          success: false,
+          message: 'qty harus berupa angka lebih besar dari 0'
+        });
       }
-      if (!reference_type) {
-        return res.status(400).json({ success: false, message: 'reference_type wajib diisi' });
-      }
+
       if (!VALID_REFERENCE_TYPES.includes(reference_type)) {
         return res.status(400).json({
           success: false,
           message: `reference_type harus salah satu dari: ${VALID_REFERENCE_TYPES.join(', ')}`
         });
       }
-      if (!created_by) {
-        return res.status(400).json({
+
+      // Pastikan pengguna berhak mengakses toko tujuan.
+      const storeResult = await getAuthorizedStore(req.user, store_id);
+
+      if (storeResult.error) {
+        return res.status(storeResult.status).json({
           success: false,
-          message: 'created_by wajib diisi (sementara manual, sampai Modul Auth siap)'
+          message: storeResult.error
         });
       }
 
-      // --- Validasi FK ---
-      const store = await StoreModel.findById(store_id);
-      if (!store) {
-        return res.status(404).json({ success: false, message: `Toko dengan ID ${store_id} tidak ditemukan` });
-      }
+      const variant = await VariantModel.findById(Number(variant_id));
 
-      const variant = await VariantModel.findById(variant_id);
       if (!variant) {
-        return res.status(404).json({ success: false, message: `Varian dengan ID ${variant_id} tidak ditemukan` });
+        return res.status(404).json({
+          success: false,
+          message: 'Varian produk tidak ditemukan'
+        });
       }
 
-      const user = await UserModel.findById(created_by);
-      if (!user) {
-        return res.status(404).json({ success: false, message: `User dengan ID ${created_by} tidak ditemukan` });
-      }
-
-      if (supplier_id) {
-        const supplier = await SupplierModel.findById(supplier_id);
-        if (!supplier) {
-          return res.status(404).json({ success: false, message: `Supplier dengan ID ${supplier_id} tidak ditemukan` });
-        }
-      }
-
-      // --- Validasi stok cukup, KHUSUS utk movement yang mengurangi stok ---
-      if (OUTGOING_TYPES.includes(movement_type)) {
-        const currentStock = await StockMovementModel.getCurrentStock(store_id, variant_id);
-
-        if (currentStock === null) {
+      if (supplier_id !== undefined && supplier_id !== null && supplier_id !== '') {
+        if (!isPositiveInteger(supplier_id)) {
           return res.status(400).json({
             success: false,
-            message: `Belum ada data stok untuk toko ${store_id} & varian ${variant_id}. Buat dulu lewat POST /api/stocks sebelum mengurangi stok.`
+            message: 'supplier_id tidak valid'
           });
         }
 
-        if (currentStock < qty) {
-          return res.status(409).json({
+        const supplier = await SupplierModel.findById(Number(supplier_id));
+
+        if (!supplier) {
+          return res.status(404).json({
             success: false,
-            message: `Stok tidak mencukupi. Stok saat ini: ${currentStock}, diminta: ${qty}`,
-            error: 'INSUFFICIENT_STOCK',
-            current_stock: currentStock
+            message: 'Supplier tidak ditemukan'
           });
         }
+      }
+
+      const quantity = Number(qty);
+
+      if (OUTGOING_TYPES.includes(movement_type)) {
+        const currentStock = await StockMovementModel.getCurrentStock(
+          Number(store_id),
+          Number(variant_id)
+        );
+
+        if (currentStock === null || currentStock === undefined) {
+          return res.status(400).json({
+            success: false,
+            message: 'Data stok untuk toko dan varian ini belum tersedia'
+          });
+        }
+
+        if (Number(currentStock) < quantity) {
+          return res.status(409).json({
+            success: false,
+            message: `Stok tidak mencukupi. Stok saat ini: ${currentStock}, diminta: ${quantity}`,
+            error: 'INSUFFICIENT_STOCK',
+            current_stock: Number(currentStock)
+          });
+        }
+      }
+
+      // Jangan percaya created_by dari request body.
+      const createdBy = Number(req.user?.id);
+
+      if (!isPositiveInteger(createdBy)) {
+        return res.status(401).json({
+          success: false,
+          message: 'Identitas pengguna dari token tidak valid'
+        });
       }
 
       const data = await StockMovementModel.create({
-        store_id, variant_id, movement_type, qty,
-        reference_type, reference_id, supplier_id, note, created_by
+        store_id: Number(store_id),
+        variant_id: Number(variant_id),
+        movement_type,
+        qty: quantity,
+        reference_type,
+        reference_id: reference_id || null,
+        supplier_id: supplier_id ? Number(supplier_id) : null,
+        note: note || null,
+        created_by: createdBy
       });
 
       return res.status(201).json({
@@ -161,10 +330,12 @@ const StockMovementController = {
       });
     } catch (error) {
       console.error('StockMovementController.create error:', error);
-      return res.status(500).json({ success: false, message: 'Gagal mencatat pergerakan stok', error: error.message });
+      return res.status(500).json({
+        success: false,
+        message: 'Gagal mencatat pergerakan stok'
+      });
     }
   }
-
 };
 
 module.exports = StockMovementController;
