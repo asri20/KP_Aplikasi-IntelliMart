@@ -1,4 +1,4 @@
-# ===== LOGS =====
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -7,62 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# ===== DEPENDENCIES =====
 node_modules
 dist
 dist-ssr
 *.local
 
-# ===== EDITOR & IDE =====
+# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-!.vscode/settings.json
-!.vscode/launch.json
 .idea
-*.iml
+.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# ===== OS FILES =====
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# ===== ENVIRONMENT VARIABLES =====
-# JANGAN commit file .env apapun yang berisi secret!
-.env
-.env.local
-.env.production.local
-.env.development.local
-.env.test.local
-# PENTING: .env.example HARUS di-commit sebagai template
-
-# ===== BUILD OUTPUTS =====
-build
-coverage
-.vite
-*.timestamp-*
-
-# ===== HUSKY =====
-.husky/_
-
-# ===== TESTING (untuk iterasi berikutnya) =====
-playwright-report/
-test-results/
-cypress/videos/
-cypress/screenshots/
-cypress/downloads/
-
-# ===== DEPLOYMENT LOCAL =====
-.netlify
-.vercel
-
-
-# AI Agent Reports (lokal saja)
-.COMPLETION_REPORT.txt
-SUMMARY.md
-ITERASI_*_COMPLETE.md
-CHECKLIST.md
