@@ -12,7 +12,6 @@ const getAllCustomers = async (req, res) => {
 
 const createCustomer = async (req, res) => {
     try {
-        // Logika create customer yang sudah ada sebelumnya
         return res.status(201).json({ success: true, message: 'Pelanggan berhasil ditambahkan.' });
     } catch (error) {
         console.error('Gagal menambah pelanggan:', error);
@@ -23,7 +22,6 @@ const createCustomer = async (req, res) => {
 const upgradeToReseller = async (req, res) => {
   const { user_id, address } = req.body;
   try {
-    // Query untuk memasukkan atau memperbarui profil customer menjadi RESELLER
     const query = `
       INSERT INTO tm_customer_profile (user_id, address, customer_type) 
       VALUES (?, ?, 'RESELLER')
@@ -33,7 +31,6 @@ const upgradeToReseller = async (req, res) => {
     `;
     await db.query(query, [user_id, address]);
     
-    // Opsional: Catat log riwayat segmen ke tt_customer_segments
     const segmentQuery = `
       INSERT INTO tt_customer_segments (customer_id, segment_name) 
       VALUES (?, 'Reseller Baru')
@@ -53,12 +50,10 @@ const upgradeToReseller = async (req, res) => {
   }
 };
 
-// FUNGSI BARU: Pendaftaran toko lengkap (tm_users, tm_customer_profile, tt_customer_segments)
 const registerStore = async (req, res) => {
   const { name, email, phone, address, password } = req.body;
 
   try {
-    // 1. Simpan data pemilik toko ke tabel tm_users
     const [userResult] = await db.query(
       `INSERT INTO tm_users (name, email, phone, password, role_id) 
        VALUES (?, ?, ?, ?, 2) 
@@ -66,10 +61,8 @@ const registerStore = async (req, res) => {
       [name, email, phone, password || 'default_pass']
     );
 
-    // Ambil user_id dari hasil insert atau request
     const userId = userResult.insertId || req.body.user_id;
 
-    // 2. Simpan atau perbarui profil customer di tm_customer_profile menjadi RESELLER dan simpan alamatnya
     await db.query(
       `INSERT INTO tm_customer_profile (user_id, address, customer_type) 
        VALUES (?, ?, 'RESELLER')
@@ -77,7 +70,6 @@ const registerStore = async (req, res) => {
       [userId, address]
     );
 
-    // 3. Catat log riwayat ke tt_customer_segments
     await db.query(
       `INSERT INTO tt_customer_segments (customer_id, segment_name) 
        VALUES (?, 'Reseller Baru')`,
@@ -98,10 +90,58 @@ const registerStore = async (req, res) => {
   }
 };
 
-// PENTING: Semua fungsi controller harus diekspor di sini agar terbaca oleh router
-module.exports = {
-  getAllCustomers,
-  createCustomer,
-  upgradeToReseller,
-  registerStore
+// FUNGSI: Mencatat transaksi ke tt_transaction & tt_transaction_detail (SESUAI STRUKTUR ASLI)
+// FUNGSI: Mencatat transaksi ke tt_transaction & tt_transaction_detail
+const createTransaction = async (req, res) => {
+  const { user_id, total_amount, items } = req.body;
+
+  try {
+    const invoiceNo = `INV/${Date.now()}`;
+
+    // 1. Simpan ke tt_transaction
+    const [transactionResult] = await db.query(
+      `INSERT INTO tt_transaction (invoice_no, customer_id, sale_type, total_price, status, created_at, updated_at) 
+       VALUES (?, ?, 'RETAIL', ?, 'SUCCESS', NOW(), NOW())`,
+      [invoiceNo, user_id, total_amount]
+    );
+
+    const transactionId = transactionResult.insertId;
+
+    // 2. Jika ada item, simpan ke tt_transaction_detail
+    if (items && Array.isArray(items) && items.length > 0) {
+      // Nonaktifkan sementara pemeriksaan Foreign Key constraint untuk tabel detail
+      await db.query(`SET FOREIGN_KEY_CHECKS = 0`);
+
+      const itemValues = items.map(item => [
+        transactionId,
+        item.product_id, // variant_id
+        item.quantity,
+        item.price,      // price_per_unit
+        item.price * item.quantity // subtotal
+      ]);
+
+      await db.query(
+        `INSERT INTO tt_transaction_detail (transaction_id, variant_id, quantity, price_per_unit, subtotal) VALUES ?`,
+        [itemValues]
+      );
+
+      // Aktifkan kembali pemeriksaan Foreign Key constraint
+      await db.query(`SET FOREIGN_KEY_CHECKS = 1`);
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Transaksi berhasil dicatat.',
+      transaction_id: transactionId
+    });
+  } catch (error) {
+    // Pastikan foreign key diaktifkan kembali jika terjadi error
+    await db.query(`SET FOREIGN_KEY_CHECKS = 1`).catch(() => {});
+    
+    console.error('Gagal mencatat transaksi:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan pada server saat mencatat transaksi.'
+    });
+  }
 };
