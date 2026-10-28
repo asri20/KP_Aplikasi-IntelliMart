@@ -90,7 +90,6 @@ const registerStore = async (req, res) => {
   }
 };
 
-// FUNGSI: Mencatat transaksi ke tt_transaction & tt_transaction_detail (SESUAI STRUKTUR ASLI)
 // FUNGSI: Mencatat transaksi ke tt_transaction & tt_transaction_detail
 const createTransaction = async (req, res) => {
   const { user_id, total_amount, items } = req.body;
@@ -144,4 +143,37 @@ const createTransaction = async (req, res) => {
       message: 'Terjadi kesalahan pada server saat mencatat transaksi.'
     });
   }
+};
+
+// FUNGSI: Mengambil riwayat pembelian dari tt_transaction
+const getPurchaseHistory = async (req, res) => {
+  const { user_id } = req.params;
+
+  try {
+    const [rows] = await db.query(
+      `SELECT id AS transaction_id, invoice_no, total_price AS total_amount, status, created_at AS transaction_date 
+       FROM tt_transaction WHERE customer_id = ? ORDER BY created_at DESC`,
+      [user_id]
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: rows
+    });
+  } catch (error) {
+    console.error('Gagal mengambil riwayat pembelian:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Terjadi kesalahan pada server.'
+    });
+  }
+};
+
+module.exports = {
+  getAllCustomers,
+  createCustomer,
+  upgradeToReseller,
+  registerStore,
+  createTransaction,
+  getPurchaseHistory
 };
