@@ -10,12 +10,17 @@ import Customers from "../pages/Customers";
 import Suppliers from "../pages/Suppliers";
 import Finance from "../pages/Finance";
 import AllInsights from "../pages/AllInsights";
+import CustomerHistoryPage from "../features/customers/pages/CustomerHistoryPage";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/select-store" element={<SelectStore />} />
+      
+      {/* Rute publik untuk riwayat pembelian di toko */}
+      <Route path="/store/history" element={<CustomerHistoryPage />} />
+
       <Route
         path="/"
         element={
@@ -33,6 +38,7 @@ export default function AppRoutes() {
         <Route path="finance" element={<Finance />} />
         <Route path="insights" element={<AllInsights />} />
       </Route>
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
