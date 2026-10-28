@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const categoryController = require('../controllers/categoryController');
+const { verifyToken, checkOwner } = require('../middlewares/authMiddleware');
+
+// Category management is restricted to authenticated Owners.
+router.use(verifyToken, checkOwner);
 
 router.get('/', categoryController.listCategories);
 router.get('/:id', categoryController.getCategory);
