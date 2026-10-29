@@ -58,14 +58,80 @@ async function getCurrentStock(store_id, variant_id) {
  * INSERT ke tt_stock_movement -> trigger trg_stock_movement_after_insert di database
  * OTOMATIS menyesuaikan tr_product_stock.stock. Tidak perlu UPDATE manual di sini.
  */
-async function create({ store_id, variant_id, movement_type, qty, reference_type, reference_id, supplier_id, note, created_by }) {
-  const [result] = await pool.query(
-    `INSERT INTO tt_stock_movement
-       (store_id, variant_id, movement_type, qty, reference_type, reference_id, supplier_id, note, created_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [store_id, variant_id, movement_type, qty, reference_type, reference_id || null, supplier_id || null, note || null, created_by]
-  );
-  return findById(result.insertId);
+
+async function create({
+  store_id,
+  variant_id,
+  movement_type,
+  qty,
+  reference_type,
+  reference_id,
+  supplier_id,
+  note,
+  created_by
+}) {
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    if (['OUT', 'ADJUSTMENT_OUT'].includes(movement_type)) {
+      const [rows] = await connection.query(
+        `SELECT stock
+         FROM tr_product_stock
+         WHERE store_id = ? AND variant_id = ?
+         FOR UPDATE`,
+        [store_id, variant_id]
+      );
+
+      const currentStock = rows[0]
+        ? Number(rows[0].stock)
+        : null;
+
+      if (currentStock === null || currentStock < Number(qty)) {
+        const error = new Error(
+          currentStock === null
+            ? 'Data stok untuk toko dan varian ini belum tersedia'
+            : `Stok tidak mencukupi. Stok saat ini: ${currentStock}, diminta: ${qty}`
+        );
+
+        error.code = currentStock === null
+          ? 'STOCK_NOT_FOUND'
+          : 'INSUFFICIENT_STOCK';
+        error.current_stock = currentStock;
+
+        throw error;
+      }
+    }
+
+    const [result] = await connection.query(
+      `INSERT INTO tt_stock_movement
+        (store_id, variant_id, movement_type, qty, reference_type,
+         reference_id, supplier_id, note, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        store_id,
+        variant_id,
+        movement_type,
+        qty,
+        reference_type,
+        reference_id || null,
+        supplier_id || null,
+        note || null,
+        created_by
+      ]
+    );
+
+    await connection.commit();
+
+    return await findById(result.insertId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
+
 
 module.exports = { findAll, findById, getCurrentStock, create };

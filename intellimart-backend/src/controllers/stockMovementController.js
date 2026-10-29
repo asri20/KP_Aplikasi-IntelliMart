@@ -29,7 +29,7 @@ const isValidQty = (value) =>
   value !== undefined &&
   value !== null &&
   value !== '' &&
-  Number.isFinite(Number(value)) &&
+  Number.isSafeInteger(Number(value)) &&
   Number(value) > 0;
 
 const getAccessibleStores = async (user) => {
@@ -328,13 +328,31 @@ const StockMovementController = {
         message: 'Pergerakan stok berhasil dicatat, stok otomatis diperbarui',
         data
       });
+
     } catch (error) {
+      if (
+        error.code === 'INSUFFICIENT_STOCK' ||
+        error.code === 'STOCK_NOT_FOUND'
+      ) {
+        const status = error.code === 'INSUFFICIENT_STOCK' ? 409 : 400;
+
+        return res.status(status).json({
+          success: false,
+          message: error.message,
+          error: error.code,
+          ...(error.current_stock !== undefined
+            ? { current_stock: error.current_stock }
+            : {})
+        });
+      }
+
       console.error('StockMovementController.create error:', error);
       return res.status(500).json({
         success: false,
         message: 'Gagal mencatat pergerakan stok'
       });
     }
+
   }
 };
 
