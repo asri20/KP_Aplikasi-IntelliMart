@@ -1,29 +1,26 @@
 require('dotenv').config();
-const { Sequelize } = require('sequelize');
+const mysql = require('mysql2/promise');
 
-// Setup koneksi Sequelize ke MySQL Remote
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
-    dialect: 'mysql',
-    logging: false, // Ubah ke console.log untuk debug query
-    dialectOptions: {
-      connectTimeout: 10000
-    }
-  }
-);
+// Pool koneksi MySQL Remote — sama persis pola dengan modul_4 & modul_UserKeamanan
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
 const connectDB = async () => {
   try {
-    await sequelize.authenticate();
+    const conn = await pool.getConnection();
     console.log('✅ Berhasil terhubung ke database MySQL Remote (IntelliMart)');
+    conn.release();
   } catch (error) {
     console.error('❌ Gagal terhubung ke database:', error.message);
   }
 };
 
-module.exports = { sequelize, connectDB };
+module.exports = { pool, connectDB };

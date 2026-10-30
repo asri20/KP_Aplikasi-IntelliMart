@@ -1,147 +1,634 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IntelliMart - Dashboard & Analitik</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IntelliMart — Dashboard & Analitik Multi-POS</title>
+  
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+            }
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            body: ['Inter', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-    <div class="app">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1>🛒 IntelliMart</h1>
-                <p>Dashboard & Analitik</p>
-            </div>
-            <nav>
-                <a href="#" class="nav-item active" data-section="dashboard">📊 Dashboard</a>
-                <a href="#" class="nav-item" data-section="top-products">🏆 Produk Terlaris</a>
-                <a href="#" class="nav-item" data-section="profit">💰 Laporan Profit</a>
-                <a href="#" class="nav-item" data-section="trend">📈 Tren Penjualan</a>
-            </nav>
-            <div class="store-selector">
-                <label>Pilih Toko:</label>
-                <input type="number" id="storeId" value="1" min="1">
-                <button onclick="loadAll()">Muat Data</button>
-            </div>
-        </aside>
+<body class="bg-[#FFFDFC] text-slate-800 font-body antialiased min-h-screen flex">
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Dashboard Section -->
-            <section id="section-dashboard" class="section active">
-                <h2>📊 Ringkasan Dashboard</h2>
-                <div class="cards" id="summary-cards">
-                    <div class="card card-revenue">
-                        <div class="card-icon">💵</div>
-                        <div class="card-info">
-                            <p class="card-label">Total Pendapatan</p>
-                            <h3 id="total-revenue">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-lunas">
-                        <div class="card-icon">✅</div>
-                        <div class="card-info">
-                            <p class="card-label">Transaksi LUNAS</p>
-                            <h3 id="total-lunas">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-unpaid">
-                        <div class="card-icon">⏳</div>
-                        <div class="card-info">
-                            <p class="card-label">Transaksi UNPAID</p>
-                            <h3 id="total-unpaid">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-sold">
-                        <div class="card-icon">📦</div>
-                        <div class="card-info">
-                            <p class="card-label">Produk Terjual</p>
-                            <h3 id="total-sold">Memuat...</h3>
-                        </div>
-                    </div>
-                </div>
-            </section>
+  <!-- Mobile Overlay -->
+  <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/40 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
 
-            <!-- Top Products Section -->
-            <section id="section-top-products" class="section">
-                <h2>🏆 Produk Terlaris</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nama Produk</th>
-                                <th>Varian</th>
-                                <th>Qty Terjual</th>
-                                <th>Total Revenue</th>
-                            </tr>
-                        </thead>
-                        <tbody id="top-products-body">
-                            <tr><td colspan="5" class="loading">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- Profit Section -->
-            <section id="section-profit" class="section">
-                <h2>💰 Laporan Keuntungan</h2>
-                <div class="cards">
-                    <div class="card card-revenue">
-                        <div class="card-icon">📈</div>
-                        <div class="card-info">
-                            <p class="card-label">Total Revenue</p>
-                            <h3 id="profit-revenue">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-unpaid">
-                        <div class="card-icon">📉</div>
-                        <div class="card-info">
-                            <p class="card-label">Total Cost (Modal)</p>
-                            <h3 id="profit-cost">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-lunas">
-                        <div class="card-icon">💎</div>
-                        <div class="card-info">
-                            <p class="card-label">Keuntungan Bersih</p>
-                            <h3 id="profit-net">Memuat...</h3>
-                        </div>
-                    </div>
-                    <div class="card card-sold">
-                        <div class="card-icon">📊</div>
-                        <div class="card-info">
-                            <p class="card-label">Margin</p>
-                            <h3 id="profit-margin">Memuat...</h3>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Trend Section -->
-            <section id="section-trend" class="section">
-                <h2>📈 Tren Penjualan Harian</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tanggal</th>
-                                <th>Jumlah Transaksi</th>
-                                <th>Total Pendapatan</th>
-                            </tr>
-                        </thead>
-                        <tbody id="trend-body">
-                            <tr><td colspan="3" class="loading">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+  <!-- Sidebar (Matching OwnerSidebar.jsx) -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-orange-100 flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0 lg:static lg:shrink-0">
+    <!-- Logo -->
+    <div class="h-20 flex items-center justify-between border-b border-orange-100 px-6">
+      <div>
+        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 font-display">
+          Intelli<span class="text-brand-500">Mart</span>
+        </h1>
+        <p class="text-xs text-slate-400 font-medium">POS & Inventory Management</p>
+      </div>
+      <button class="lg:hidden text-slate-400 hover:text-slate-600" onclick="toggleSidebar()">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Navigation -->
+    <nav class="flex-1 space-y-1.5 px-4 py-6 overflow-y-auto">
+      <a href="#dashboard" onclick="switchNav('dashboard', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition active" data-nav="dashboard">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="#stores" onclick="switchNav('stores', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="stores">
+        <i data-lucide="store" class="w-5 h-5"></i>
+        <span>Toko Saya</span>
+      </a>
+
+      <a href="#catalog" onclick="switchNav('catalog', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="catalog">
+        <i data-lucide="package" class="w-5 h-5"></i>
+        <span>Katalog Produk</span>
+      </a>
+
+      <a href="#inventory" onclick="switchNav('inventory', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="inventory">
+        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        <span>Stok Menipis</span>
+        <span id="nav-lowstock-badge" class="ml-auto hidden rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">0</span>
+      </a>
+
+      <a href="#profit" onclick="switchNav('profit', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="profit">
+        <i data-lucide="wallet" class="w-5 h-5"></i>
+        <span>Laporan Profit</span>
+      </a>
+
+      <a href="#trend" onclick="switchNav('trend', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="trend">
+        <i data-lucide="trending-up" class="w-5 h-5"></i>
+        <span>Tren Penjualan</span>
+      </a>
+
+      <a href="#customers" onclick="switchNav('customers', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="customers">
+        <i data-lucide="users" class="w-5 h-5"></i>
+        <span>Segmen Pelanggan</span>
+      </a>
+
+      <a href="#transactions" onclick="switchNav('transactions', event)" class="nav-item flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition text-slate-600 hover:bg-orange-50 hover:text-brand-500" data-nav="transactions">
+        <i data-lucide="receipt" class="w-5 h-5"></i>
+        <span>Riwayat Transaksi</span>
+      </a>
+    </nav>
+
+    <!-- Owner Profile Box -->
+    <div class="m-4 rounded-2xl border border-orange-100 bg-orange-50/80 p-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white font-bold font-display shadow-sm shadow-orange-500/20">
+          OW
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold text-slate-800 truncate">Owner Store</p>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <p class="text-xs text-slate-500 truncate">Akses Penuh</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+
+    <!-- Header (Matching OwnerHeader.jsx) -->
+    <header class="h-20 shrink-0 bg-white border-b border-orange-100 px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
+      <div class="flex items-center gap-3">
+        <button class="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-orange-50 hover:text-brand-500" onclick="toggleSidebar()">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Search Bar -->
+        <div class="relative hidden sm:block w-72 md:w-96">
+          <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </span>
+          <input
+            type="text"
+            id="global-search"
+            placeholder="Cari produk, kategori, atau invoice..."
+            oninput="handleGlobalSearch(this.value)"
+            class="w-full rounded-xl border border-orange-100 bg-orange-50/30 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-orange-100 text-slate-700"
+          />
+        </div>
+      </div>
+
+      <!-- Right Header Actions -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <!-- Store Selector Dropdown -->
+        <div class="relative">
+          <div class="flex items-center gap-2 bg-orange-50/70 border border-orange-200/70 rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 shadow-sm">
+            <i data-lucide="store" class="w-4 h-4 text-brand-500"></i>
+            <span class="hidden md:inline text-slate-400 font-normal">Toko:</span>
+            <select id="store-select" onchange="handleStoreChange(this.value)" class="bg-transparent border-none outline-none font-bold text-slate-800 cursor-pointer pr-1">
+              <option value="" disabled>Memuat Toko...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Refresh Data Button -->
+        <button onclick="refreshCurrentView()" title="Muat Ulang Data" class="p-2.5 rounded-xl border border-orange-100 hover:border-orange-200 bg-white text-slate-600 hover:text-brand-500 hover:bg-orange-50 transition active:scale-95 shadow-sm">
+          <i data-lucide="refresh-cw" class="w-4 h-4" id="refresh-icon"></i>
+        </button>
+
+        <!-- Notifications -->
+        <button class="relative p-2.5 rounded-xl border border-orange-100 hover:border-orange-200 bg-white text-slate-600 hover:text-brand-500 hover:bg-orange-50 transition shadow-sm" onclick="showToast('Sistem sinkron dengan MySQL remote', 'info')">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+          <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-500 px-1 text-[9px] font-bold text-white shadow">
+            3
+          </span>
+        </button>
+
+        <!-- User Profile Pill -->
+        <div class="flex items-center gap-2.5 pl-1 sm:pl-2 border-l border-slate-100">
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-brand-500 text-xs font-extrabold text-white shadow-sm shadow-orange-500/20 font-display">
+            O
+          </div>
+          <div class="hidden md:block text-left">
+            <p class="text-xs font-bold text-slate-800 leading-tight">Admin Owner</p>
+            <p class="text-[11px] text-brand-600 font-medium">Port 5001 • Online</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Body -->
+    <main class="flex-1 p-5 lg:p-8 space-y-6">
+
+      <!-- ================= SECTION 1: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-panel space-y-6">
+        <!-- Greeting Header Banner -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+          <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 font-display tracking-tight">
+              👋 Selamat datang, Owner!
+            </h1>
+            <p class="text-sm text-slate-500 mt-1">
+              Berikut ringkasan statistik & kinerja toko <span id="banner-store-name" class="font-semibold text-slate-700">Toko Aktif</span> hari ini.
+            </p>
+          </div>
+
+          <div class="self-start sm:self-auto flex items-center gap-2 px-4 py-2 rounded-xl border border-orange-100 bg-orange-50 text-xs font-semibold text-slate-700">
+            <i data-lucide="calendar" class="w-4 h-4 text-brand-500"></i>
+            <span id="current-date-badge">Memuat tanggal...</span>
+          </div>
+        </div>
+
+        <!-- 4 Primary Metric Stat Cards (Matching DashboardCard.jsx) -->
+        <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          <!-- Total Revenue Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Pendapatan</span>
+              <div class="w-10 h-10 rounded-xl bg-orange-50 text-brand-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <h3 id="stat-revenue" class="text-2xl font-black text-slate-900 font-display tracking-tight">Rp 0</h3>
+            <p class="mt-2 text-xs font-medium text-emerald-600 flex items-center gap-1">
+              <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+              <span id="stat-today-revenue">Hari ini: Rp 0</span>
+            </p>
+          </div>
+
+          <!-- Total Transaksi Lunas Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Transaksi Selesai</span>
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <h3 id="stat-lunas" class="text-2xl font-black text-slate-900 font-display tracking-tight">0</h3>
+            <p class="mt-2 text-xs font-medium text-slate-500 flex items-center gap-1">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Status LUNAS / Settled</span>
+            </p>
+          </div>
+
+          <!-- Antrian Unpaid Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Antrian Kasir</span>
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <h3 id="stat-unpaid" class="text-2xl font-black text-slate-900 font-display tracking-tight">0</h3>
+            <p class="mt-2 text-xs font-medium text-amber-600 flex items-center gap-1">
+              <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+              <span>Menunggu pembayaran</span>
+            </p>
+          </div>
+
+          <!-- Stok Rendah Warning Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-5 lg:p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Stok Menipis</span>
+              <div class="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              </div>
+            </div>
+            <h3 id="stat-lowstock" class="text-2xl font-black text-slate-900 font-display tracking-tight">0</h3>
+            <p class="mt-2 text-xs font-medium text-red-600 flex items-center gap-1">
+              <i data-lucide="arrow-down-right" class="w-3.5 h-3.5"></i>
+              <span>Perlu restock segera</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Middle Row: Sales Chart & Category Breakdown (Matching SalesChart.jsx & CategoryChart.jsx) -->
+        <div class="grid gap-6 xl:grid-cols-[1.7fr_1fr]">
+          
+          <!-- Sales Trend Chart Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base font-display flex items-center gap-2">
+                  <i data-lucide="line-chart" class="w-4 h-4 text-brand-500"></i>
+                  Grafik Penjualan
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Tren omzet harian berdasarkan transaksi lunas (vw_sales_report_daily)</p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <select id="trend-period-select" onchange="loadSalesTrendChart(this.value)" class="rounded-xl border border-orange-100 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 outline-none focus:border-brand-500 cursor-pointer shadow-sm">
+                  <option value="7">7 Hari Terakhir</option>
+                  <option value="30" selected>30 Hari Terakhir</option>
+                  <option value="90">90 Hari Terakhir</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Canvas for Chart.js -->
+            <div class="relative h-64 w-full">
+              <canvas id="salesTrendChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Category Breakdown Card -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-900 text-base font-display flex items-center gap-2">
+                  <i data-lucide="pie-chart" class="w-4 h-4 text-brand-500"></i>
+                  Distribusi Kategori
+                </h3>
+                <span class="text-xs font-semibold text-brand-500 bg-orange-50 px-2.5 py-1 rounded-full">Katalog</span>
+              </div>
+              <p class="text-xs text-slate-400 mb-4">Komposisi item produk terlaris di toko ini</p>
+            </div>
+
+            <div class="relative h-48 w-full flex items-center justify-center my-2">
+              <canvas id="categoryDonutChart"></canvas>
+            </div>
+
+            <div id="category-legend" class="space-y-2 mt-4 pt-4 border-t border-slate-100 text-xs text-slate-600">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Row: Top Selling Products & Recent Transactions (Matching ProductList.jsx & TransactionTable.jsx) -->
+        <div class="grid gap-6 xl:grid-cols-2">
+          
+          <!-- Top Products List -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base font-display flex items-center gap-2">
+                  <i data-lucide="flame" class="w-4 h-4 text-brand-500"></i>
+                  Produk Terlaris
+                </h3>
+                <p class="text-xs text-slate-400">Paling banyak dipesan di toko ini (vw_best_selling_products)</p>
+              </div>
+              <button onclick="switchNav('catalog')" class="text-xs font-bold text-brand-500 hover:text-brand-600 flex items-center gap-1 transition">
+                <span>Lihat Semua</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div id="top-products-container" class="divide-y divide-slate-100">
+              <div class="py-8 text-center text-xs text-slate-400">Memuat produk terlaris...</div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Table -->
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 class="font-bold text-slate-900 text-base font-display flex items-center gap-2">
+                  <i data-lucide="receipt" class="w-4 h-4 text-brand-500"></i>
+                  Transaksi Terbaru
+                </h3>
+                <p class="text-xs text-slate-400">Aktivitas pesanan terkini kasir & POS</p>
+              </div>
+              <button onclick="switchNav('transactions')" class="text-xs font-bold text-brand-500 hover:text-brand-600 flex items-center gap-1 transition">
+                <span>Lihat Semua</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-orange-50/50 text-slate-500">
+                  <tr>
+                    <th class="px-4 py-3 font-semibold rounded-l-lg">No. Invoice</th>
+                    <th class="px-4 py-3 font-semibold">Waktu</th>
+                    <th class="px-4 py-3 font-semibold">Total Item</th>
+                    <th class="px-4 py-3 font-semibold">Total Nilai</th>
+                    <th class="px-4 py-3 font-semibold rounded-r-lg">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-transactions-container" class="divide-y divide-slate-100">
+                  <tr><td colspan="5" class="py-6 text-center text-slate-400">Memuat transaksi...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 2: TOKO SAYA ================= -->
+      <section id="view-stores" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Toko Saya</h2>
+            <p class="text-sm text-slate-500">Daftar seluruh gerai / cabang toko yang terdaftar di sistem IntelliMart.</p>
+          </div>
+          <button onclick="showToast('Fitur penambahan toko dapat dikonfigurasi melalui modul master', 'info')" class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold shadow-sm transition">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Tambah Toko Baru</span>
+          </button>
+        </div>
+
+        <div id="stores-grid" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <!-- Dynamically populated store cards -->
+        </div>
+      </section>
+
+      <!-- ================= SECTION 3: KATALOG PRODUK ================= -->
+      <section id="view-catalog" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Katalog Produk Toko</h2>
+            <p class="text-sm text-slate-500">Daftar produk, varian, harga jual, dan stok per toko (vw_product_catalog).</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="relative w-64">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="catalog-search-input" placeholder="Cari nama, SKU, kategori..." oninput="handleCatalogSearch(this.value)" class="w-full rounded-xl border border-orange-100 bg-white py-2 pl-9 pr-3 text-xs outline-none focus:border-brand-500 focus:ring-2 focus:ring-orange-100" />
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-orange-50/60 text-slate-600">
+                <tr>
+                  <th class="px-5 py-3.5 font-bold">Produk & Varian</th>
+                  <th class="px-5 py-3.5 font-bold">SKU / Barcode</th>
+                  <th class="px-5 py-3.5 font-bold">Kategori</th>
+                  <th class="px-5 py-3.5 font-bold">Brand</th>
+                  <th class="px-5 py-3.5 font-bold">Harga Toko</th>
+                  <th class="px-5 py-3.5 font-bold">Diskon</th>
+                  <th class="px-5 py-3.5 font-bold">Stok</th>
+                </tr>
+              </thead>
+              <tbody id="catalog-table-body" class="divide-y divide-slate-100">
+                <tr><td colspan="7" class="py-8 text-center text-slate-400">Memuat katalog...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 4: STOK MENIPIS ================= -->
+      <section id="view-inventory" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display text-red-600 flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+              Peringatan Stok Rendah
+            </h2>
+            <p class="text-sm text-slate-500">Daftar produk yang stok fisiknya sudah berada di bawah ambang batas (vw_low_stock_alert).</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-red-100 bg-white shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-red-50/60 text-red-900">
+                <tr>
+                  <th class="px-5 py-3.5 font-bold">Nama Toko</th>
+                  <th class="px-5 py-3.5 font-bold">Produk</th>
+                  <th class="px-5 py-3.5 font-bold">Varian</th>
+                  <th class="px-5 py-3.5 font-bold">SKU</th>
+                  <th class="px-5 py-3.5 font-bold">Stok Sekarang</th>
+                  <th class="px-5 py-3.5 font-bold">Batas Minimal</th>
+                  <th class="px-5 py-3.5 font-bold">Defisit Restock</th>
+                </tr>
+              </thead>
+              <tbody id="lowstock-table-body" class="divide-y divide-red-50">
+                <tr><td colspan="7" class="py-8 text-center text-slate-400">Memeriksa level stok...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 5: LAPORAN PROFIT ================= -->
+      <section id="view-profit" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Laporan Margin & Profit</h2>
+            <p class="text-sm text-slate-500">Analisis keuntungan bersih (Revenue - Modal tr_product_stock) pada transaksi settled.</p>
+          </div>
+          
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-slate-400">Mulai:</span>
+              <input type="date" id="profit-start-date" class="rounded-xl border border-orange-100 bg-white px-3 py-1.5 outline-none focus:border-brand-500 shadow-sm" />
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-slate-400">Sampai:</span>
+              <input type="date" id="profit-end-date" class="rounded-xl border border-orange-100 bg-white px-3 py-1.5 outline-none focus:border-brand-500 shadow-sm" />
+            </div>
+            <button onclick="handleProfitFilter()" class="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-sm transition">
+              Terapkan Filter
+            </button>
+          </div>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <span class="text-xs font-bold uppercase text-slate-400">Total Omzet (Revenue)</span>
+            <h3 id="profit-val-revenue" class="text-2xl font-extrabold text-slate-900 mt-2 font-display">Rp 0</h3>
+            <p class="text-xs text-slate-400 mt-1">Nilai bruto penjualan</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <span class="text-xs font-bold uppercase text-slate-400">Estimasi Modal (Cost)</span>
+            <h3 id="profit-val-cost" class="text-2xl font-extrabold text-slate-600 mt-2 font-display">Rp 0</h3>
+            <p class="text-xs text-slate-400 mt-1">Berdasarkan base_price varian</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <span class="text-xs font-bold uppercase text-emerald-600">Keuntungan Bersih</span>
+            <h3 id="profit-val-net" class="text-2xl font-extrabold text-emerald-600 mt-2 font-display">Rp 0</h3>
+            <p class="text-xs text-slate-400 mt-1">Revenue dikurangi modal pokok</p>
+          </div>
+
+          <div class="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <span class="text-xs font-bold uppercase text-brand-500">Margin Keuntungan</span>
+            <h3 id="profit-val-margin" class="text-2xl font-extrabold text-brand-500 mt-2 font-display">0%</h3>
+            <p class="text-xs text-slate-400 mt-1">Persentase profitabilitas</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 6: TREN PENJUALAN ================= -->
+      <section id="view-trend" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Laporan Penjualan Harian</h2>
+            <p class="text-sm text-slate-500">Rincian performa transaksi harian dari view vw_sales_report_daily.</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-orange-50/60 text-slate-600">
+                <tr>
+                  <th class="px-5 py-3.5 font-bold">Tanggal Transaksi</th>
+                  <th class="px-5 py-3.5 font-bold">Jumlah Transaksi Selesai</th>
+                  <th class="px-5 py-3.5 font-bold">Total Omzet Harian</th>
+                </tr>
+              </thead>
+              <tbody id="trend-table-body" class="divide-y divide-slate-100">
+                <tr><td colspan="3" class="py-8 text-center text-slate-400">Memuat tren...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 7: SEGMEN PELANGGAN ================= -->
+      <section id="view-customers" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Segmen & Profil Pelanggan</h2>
+            <p class="text-sm text-slate-500">Kategori loyalitas & segmentasi pelanggan terkini (vw_customer_latest_segment).</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-orange-50/60 text-slate-600">
+                <tr>
+                  <th class="px-5 py-3.5 font-bold">ID</th>
+                  <th class="px-5 py-3.5 font-bold">Nama Pelanggan</th>
+                  <th class="px-5 py-3.5 font-bold">Email</th>
+                  <th class="px-5 py-3.5 font-bold">Tipe Pelanggan</th>
+                  <th class="px-5 py-3.5 font-bold">Segmen Terakhir</th>
+                  <th class="px-5 py-3.5 font-bold">Waktu Klasifikasi</th>
+                </tr>
+              </thead>
+              <tbody id="customers-table-body" class="divide-y divide-slate-100">
+                <tr><td colspan="6" class="py-8 text-center text-slate-400">Memuat segmen...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= SECTION 8: TRANSAKSI ================= -->
+      <section id="view-transactions" class="view-panel space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-orange-100">
+          <div>
+            <h2 class="text-2xl font-extrabold text-slate-900 font-display">Riwayat Transaksi</h2>
+            <p class="text-sm text-slate-500">Catatan transaksi penjualan di toko aktif.</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-white shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-orange-50/60 text-slate-600">
+                <tr>
+                  <th class="px-5 py-3.5 font-bold">No. Invoice</th>
+                  <th class="px-5 py-3.5 font-bold">Waktu</th>
+                  <th class="px-5 py-3.5 font-bold">Tipe Penjualan</th>
+                  <th class="px-5 py-3.5 font-bold">Kasir</th>
+                  <th class="px-5 py-3.5 font-bold">Pelanggan</th>
+                  <th class="px-5 py-3.5 font-bold">Total Item</th>
+                  <th class="px-5 py-3.5 font-bold">Total Belanja</th>
+                  <th class="px-5 py-3.5 font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody id="all-transactions-body" class="divide-y divide-slate-100">
+                <tr><td colspan="8" class="py-8 text-center text-slate-400">Memuat transaksi...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Element -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="flex items-center gap-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 text-xs font-semibold">
+      <i id="toast-icon" data-lucide="info" class="w-4 h-4 text-brand-400"></i>
+      <span id="toast-message">Notifikasi</span>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
 </body>
 </html>

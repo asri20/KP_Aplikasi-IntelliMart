@@ -1,182 +1,84 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/**
+ * IntelliMart - POS & Inventory Management
+ * Custom Styles extending Tailwind CSS tokens
+ * Inspired by CUBE CSS from templating_react_multiPOS-main
+ */
 
-body {
-    font-family: 'Inter', sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    min-height: 100vh;
+:root {
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-surface-base: #FFFDFC;
 }
 
-.app {
-    display: flex;
-    min-height: 100vh;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-/* Sidebar */
-.sidebar {
-    width: 260px;
-    background: #1e293b;
-    padding: 24px 16px;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #334155;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.sidebar-header h1 {
-    font-size: 20px;
-    color: #38bdf8;
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
 }
 
-.sidebar-header p {
-    font-size: 12px;
-    color: #94a3b8;
-    margin-top: 4px;
-    margin-bottom: 24px;
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.nav-item {
-    display: block;
-    padding: 12px 16px;
-    margin-bottom: 4px;
-    border-radius: 8px;
-    color: #94a3b8;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.2s;
+/* Nav Item Styling */
+.nav-item.active {
+  background-color: #f97316 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 }
 
-.nav-item:hover { background: #334155; color: #e2e8f0; }
-.nav-item.active { background: #38bdf8; color: #0f172a; font-weight: 600; }
-
-.store-selector {
-    margin-top: auto;
-    padding: 16px;
-    background: #0f172a;
-    border-radius: 12px;
-    border: 1px solid #334155;
+.nav-item.active i {
+  color: #ffffff !important;
 }
 
-.store-selector label {
-    display: block;
-    font-size: 12px;
-    color: #94a3b8;
-    margin-bottom: 8px;
+/* Animation utilities */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.store-selector input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #334155;
-    border-radius: 6px;
-    background: #1e293b;
-    color: #e2e8f0;
-    font-size: 14px;
-    margin-bottom: 8px;
+.view-panel:not(.hidden) {
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
-.store-selector button {
-    width: 100%;
-    padding: 10px;
-    background: #38bdf8;
-    color: #0f172a;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.2s;
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
 }
 
-.store-selector button:hover { background: #7dd3fc; }
-
-/* Main Content */
-.main-content {
-    flex: 1;
-    padding: 32px;
-    overflow-y: auto;
+/* Badge pulse for live metrics */
+.pulse-emerald {
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-emerald 2s infinite;
 }
 
-.section { display: none; }
-.section.active { display: block; animation: fadeIn 0.3s ease; }
-
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-h2 {
-    font-size: 22px;
-    color: #f1f5f9;
-    margin-bottom: 24px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #334155;
-}
-
-/* Cards */
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-}
-
-.card {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    border: 1px solid #334155;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-
-.card-icon { font-size: 32px; }
-
-.card-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
-
-.card-info h3 { font-size: 24px; font-weight: 700; margin-top: 4px; }
-
-.card-revenue .card-info h3 { color: #4ade80; }
-.card-lunas .card-info h3 { color: #38bdf8; }
-.card-unpaid .card-info h3 { color: #fbbf24; }
-.card-sold .card-info h3 { color: #a78bfa; }
-
-/* Tables */
-.table-container {
-    background: #1e293b;
-    border-radius: 12px;
-    border: 1px solid #334155;
-    overflow: hidden;
-}
-
-table { width: 100%; border-collapse: collapse; }
-
-thead th {
-    background: #0f172a;
-    padding: 14px 16px;
-    text-align: left;
-    font-size: 12px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-tbody td {
-    padding: 12px 16px;
-    border-top: 1px solid #334155;
-    font-size: 14px;
-}
-
-tbody tr:hover { background: #334155; }
-
-.loading { text-align: center; color: #64748b; padding: 32px !important; }
-
-.error-msg {
-    background: #7f1d1d;
-    color: #fecaca;
-    padding: 16px;
-    border-radius: 8px;
-    margin-top: 12px;
-    font-size: 14px;
+@keyframes pulse-emerald {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
