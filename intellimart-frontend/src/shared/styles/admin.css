@@ -1,0 +1,23 @@
+/**
+ * ADMIN STYLES
+ * Placeholder untuk styling khusus area admin
+ * Akan diimplementasi di iterasi berikutnya
+ */
+
+@layer components {
+  /* Admin-specific styles akan ditambahkan di iterasi dashboard */
+  
+  /* Contoh struktur untuk referensi nanti:
+  .admin-sidebar {
+    ...
+  }
+  
+  .admin-header {
+    ...
+  }
+  
+  .admin-content {
+    ...
+  }
+  */
+}
