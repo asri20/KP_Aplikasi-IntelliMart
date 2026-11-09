@@ -3,23 +3,21 @@ import { Navigate } from 'react-router-dom';
 
 import { useAuth } from '@features/auth/hooks';
 
+import { getHomeByRole, getUserRole } from './roles';
+
 function PublicRoute({ children, redirectTo }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, clearAuth } = useAuth();
 
   if (isAuthenticated) {
-    const role = (
-      user?.role ||
-      user?.role_name ||
-      ''
-    )
-      .toString()
-      .trim()
-      .toLowerCase();
+    const currentRole = getUserRole(user);
 
-    const destination =
-      redirectTo ||
-      (role === 'manager' ? '/manager/dashboard' : '/dashboard');
+    // Jika sesi lama tidak memiliki role yang valid, hapus sesi dan tampilkan halaman login
+    if (!currentRole) {
+      clearAuth();
+      return children;
+    }
 
+    const destination = redirectTo || getHomeByRole(user);
     return <Navigate to={destination} replace />;
   }
 

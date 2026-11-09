@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { getHomeByRole } from '@core/auth/roles';
+
 import { LoginForm } from '../components/molecules';
 import { AuthLayout } from '../components/organisms';
 import { useAuth } from '../hooks';
@@ -25,20 +27,7 @@ function LoginPage() {
         refreshToken: response.refreshToken,
       });
 
-      const role = (
-        response.user?.role ||
-        response.user?.role_name ||
-        ''
-      )
-        .toString()
-        .trim()
-        .toLowerCase();
-
-      if (role === 'manager') {
-        navigate('/manager/dashboard', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      navigate(getHomeByRole(response.user), { replace: true });
     } catch (err) {
       setError(err.message || 'Terjadi kesalahan, silakan coba lagi');
     } finally {

@@ -1,653 +1,402 @@
-import { useMemo, useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ManagerHeader } from '../components/ManagerHeader';
+import { axiosClient as apiClient } from '@shared/lib/api/axiosClient';
 
-import ManagerSidebar from '../components/organisms/ManagerSidebar';
-import ManagerHeader from '../components/organisms/ManagerHeader';
-
-const sampleSales = [
-  {
-    id: 1,
-    transactionNumber: 'TRX-20261003-001',
-    date: '03 Okt 2026, 09:15',
-    cashier: 'Budi',
-    total: 125000,
-    status: 'LUNAS',
-    paymentMethod: 'Cash',
-    items: [
-      {
-        id: 1,
-        name: 'Aqua 600ml',
-        sku: 'PRD-001',
-        qty: 5,
-        price: 4000,
-      },
-      {
-        id: 2,
-        name: 'Indomie Goreng',
-        sku: 'PRD-002',
-        qty: 10,
-        price: 3500,
-      },
-      {
-        id: 3,
-        name: 'Chitato',
-        sku: 'PRD-004',
-        qty: 2,
-        price: 10000,
-      },
-    ],
-  },
-  {
-    id: 2,
-    transactionNumber: 'TRX-20261003-002',
-    date: '03 Okt 2026, 10:30',
-    cashier: 'Siti',
-    total: 78500,
-    status: 'LUNAS',
-    paymentMethod: 'QRIS',
-    items: [
-      {
-        id: 1,
-        name: 'Kopi Kapal Api',
-        sku: 'PRD-003',
-        qty: 10,
-        price: 2000,
-      },
-      {
-        id: 2,
-        name: 'Teh Botol Sosro',
-        sku: 'PRD-005',
-        qty: 7,
-        price: 5000,
-      },
-      {
-        id: 3,
-        name: 'Chitato',
-        sku: 'PRD-004',
-        qty: 3,
-        price: 10000,
-      },
-    ],
-  },
-  {
-    id: 3,
-    transactionNumber: 'TRX-20261003-003',
-    date: '03 Okt 2026, 11:45',
-    cashier: 'Budi',
-    total: 210000,
-    status: 'UNPAID',
-    paymentMethod: '-',
-    items: [
-      {
-        id: 1,
-        name: 'Aqua 600ml',
-        sku: 'PRD-001',
-        qty: 10,
-        price: 4000,
-      },
-      {
-        id: 2,
-        name: 'Indomie Goreng',
-        sku: 'PRD-002',
-        qty: 20,
-        price: 3500,
-      },
-      {
-        id: 3,
-        name: 'Teh Botol Sosro',
-        sku: 'PRD-005',
-        qty: 28,
-        price: 5000,
-      },
-    ],
-  },
-  {
-    id: 4,
-    transactionNumber: 'TRX-20261003-004',
-    date: '03 Okt 2026, 13:20',
-    cashier: 'Siti',
-    total: 56000,
-    status: 'LUNAS',
-    paymentMethod: 'Debit',
-    items: [
-      {
-        id: 1,
-        name: 'Indomie Goreng',
-        sku: 'PRD-002',
-        qty: 8,
-        price: 3500,
-      },
-      {
-        id: 2,
-        name: 'Aqua 600ml',
-        sku: 'PRD-001',
-        qty: 7,
-        price: 4000,
-      },
-    ],
-  },
-  {
-    id: 5,
-    transactionNumber: 'TRX-20261003-005',
-    date: '03 Okt 2026, 14:10',
-    cashier: 'Budi',
-    total: 142500,
-    status: 'LUNAS',
-    paymentMethod: 'QRIS',
-    items: [
-      {
-        id: 1,
-        name: 'Teh Botol Sosro',
-        sku: 'PRD-005',
-        qty: 15,
-        price: 5000,
-      },
-      {
-        id: 2,
-        name: 'Kopi Kapal Api',
-        sku: 'PRD-003',
-        qty: 10,
-        price: 2000,
-      },
-      {
-        id: 3,
-        name: 'Chitato',
-        sku: 'PRD-004',
-        qty: 5,
-        price: 10000,
-      },
-    ],
-  },
-  {
-    id: 6,
-    transactionNumber: 'TRX-20261003-006',
-    date: '03 Okt 2026, 15:05',
-    cashier: 'Siti',
-    total: 92500,
-    status: 'UNPAID',
-    paymentMethod: '-',
-    items: [
-      {
-        id: 1,
-        name: 'Aqua 600ml',
-        sku: 'PRD-001',
-        qty: 10,
-        price: 4000,
-      },
-      {
-        id: 2,
-        name: 'Chitato',
-        sku: 'PRD-004',
-        qty: 5,
-        price: 10000,
-      },
-      {
-        id: 3,
-        name: 'Indomie Goreng',
-        sku: 'PRD-002',
-        qty: 8,
-        price: 3500,
-      },
-    ],
-  },
-];
-
-const formatRupiah = (value) =>
+const formatRupiah = (amount) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
+    minimumFractionDigits: 0,
+  }).format(Number(amount || 0));
 
-const ManagerSalesPage = () => {
-  const [sales] = useState(sampleSales);
+export function ManagerSalesPage() {
+  const [store, setStore] = useState(null);
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('Semua');
-
-  // Menyimpan transaksi yang sedang dilihat detailnya
+  const [filterStatus, setFilterStatus] = useState('Semua');
   const [selectedSale, setSelectedSale] = useState(null);
 
-  const filteredSales = useMemo(() => {
-    return sales.filter((sale) => {
-      const query = searchQuery.toLowerCase();
+  const loadSales = useCallback(async () => {
+    setLoading(true);
+    try {
+      const storeRes = await apiClient.get('/stores');
+      const stores = storeRes?.data?.data || [];
+      const myStore = stores[0] || null;
+      setStore(myStore);
 
-      const matchesSearch =
-        sale.transactionNumber.toLowerCase().includes(query) ||
-        sale.cashier.toLowerCase().includes(query);
+      const txRes = await apiClient.get('/transactions', {
+        params: myStore ? { store_id: myStore.id } : {},
+      });
+      const raw = txRes?.data?.data || [];
 
-      const matchesStatus =
-        selectedStatus === 'Semua' || sale.status === selectedStatus;
+      const mapped = raw.map((tx) => {
+        const dt = tx.created_at ? new Date(tx.created_at) : null;
+        const dateStr = dt
+          ? dt.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+          : '-';
+        const timeStr = dt
+          ? dt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+          : '-';
+        const isPaid = String(tx.status || '').toUpperCase() === 'PAID';
+        const itemsList = Array.isArray(tx.items) ? tx.items : [];
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [sales, searchQuery, selectedStatus]);
+        return {
+          id: tx.id,
+          invoice: `INV-${String(tx.id).padStart(5, '0')}`,
+          customer: tx.customer_name || 'Pelanggan Umum',
+          cashier: tx.cashier_name || '-',
+          date: dateStr,
+          time: timeStr,
+          items: Number(tx.total_items || itemsList.length || 0),
+          total: Number(tx.total_price || 0),
+          payment: tx.sale_type || 'RETAIL',
+          status: isPaid ? 'Lunas' : 'Belum Lunas',
+          products: itemsList,
+        };
+      });
 
-  const totalTransactions = sales.length;
+      setSales(mapped);
+    } catch {
+      setSales([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const paidTransactions = sales.filter(
-    (sale) => sale.status === 'LUNAS'
-  ).length;
+  useEffect(() => {
+    loadSales();
+  }, [loadSales]);
 
-  const unpaidTransactions = sales.filter(
-    (sale) => sale.status === 'UNPAID'
-  ).length;
+  const filteredSales = sales.filter((sale) => {
+    const matchesSearch =
+      sale.invoice.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sale.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sale.cashier.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'Semua' || sale.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
-  const totalRevenue = sales
-    .filter((sale) => sale.status === 'LUNAS')
-    .reduce((total, sale) => total + sale.total, 0);
+  const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
+  const paidSales = sales.filter((s) => s.status === 'Lunas').length;
+  const unpaidSales = sales.filter((s) => s.status === 'Belum Lunas').length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <ManagerSidebar />
+    <div className="min-h-screen bg-[#f5f7f8]">
+      <ManagerHeader
+        title="Data Penjualan"
+        subtitle={
+          store
+            ? `Monitor dan kelola transaksi penjualan ${store.store_name}`
+            : 'Monitor dan kelola transaksi penjualan'
+        }
+      />
 
-      {/* Main Content */}
       <div className="lg:pl-64">
-        {/* Header */}
-        <ManagerHeader
-          onSearch={setSearchQuery}
-          onNotificationClick={() => {
-            console.log('Notification clicked');
-          }}
-          onProfileClick={() => {
-            console.log('Profile clicked');
-          }}
-          onLogout={() => {
-            console.log('Logout clicked');
-          }}
-        />
-
-        <main className="p-4 sm:p-6 lg:p-8">
-          {/* Page Title */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-              Penjualan
-            </h1>
-
-            <p className="mt-2 text-sm text-gray-500">
-              Pantau transaksi dan penjualan toko kamu.
-            </p>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {/* Total Transaksi */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
               <p className="text-sm text-gray-500">Total Transaksi</p>
-
-              <p className="mt-2 text-2xl font-bold text-gray-900">
-                {totalTransactions}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-400">
-                Transaksi hari ini
-              </p>
-            </div>
-
-            {/* Pendapatan */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Pendapatan</p>
-
-              <p className="mt-2 text-2xl font-bold text-gray-900">
-                {formatRupiah(totalRevenue)}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-400">
-                Dari transaksi lunas
-              </p>
-            </div>
-
-            {/* Lunas */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Transaksi Lunas</p>
-
-              <p className="mt-2 text-2xl font-bold text-green-600">
-                {paidTransactions}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-400">
-                Pembayaran berhasil
-              </p>
-            </div>
-
-            {/* Belum Lunas */}
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-              <p className="text-sm text-gray-500">Belum Lunas</p>
-
-              <p className="mt-2 text-2xl font-bold text-orange-500">
-                {unpaidTransactions}
-              </p>
-
-              <p className="mt-1 text-xs text-gray-400">
-                Menunggu pembayaran
-              </p>
-            </div>
-          </div>
-
-          {/* Transaction Table */}
-          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-            {/* Table Header */}
-            <div className="border-b border-gray-100 p-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Daftar Transaksi
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Riwayat transaksi penjualan toko.
-                  </p>
-                </div>
-
-                {/* Filter */}
-                <div className="flex flex-wrap gap-2">
-                  {['Semua', 'LUNAS', 'UNPAID'].map((status) => (
-                    <button
-                      key={status}
-                      type="button"
-                      onClick={() => setSelectedStatus(status)}
-                      className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-                        selectedStatus === status
-                          ? 'bg-brand-500 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {status === 'UNPAID'
-                        ? 'Belum Lunas'
-                        : status === 'LUNAS'
-                          ? 'Lunas'
-                          : 'Semua'}
-                    </button>
-                  ))}
-                </div>
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
               </div>
             </div>
+            <p className="text-2xl font-bold text-gray-900">{sales.length}</p>
+            <p className="text-xs text-gray-500 mt-1">Transaksi tercatat</p>
+          </div>
 
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left">
-                <thead className="bg-gray-50">
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-500">Pendapatan</p>
+              <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatRupiah(totalSales)}</p>
+            <p className="text-xs text-green-600 mt-1">Total omzet toko</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-500">Transaksi Lunas</p>
+              <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{paidSales}</p>
+            <p className="text-xs text-gray-500 mt-1">Pembayaran selesai</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-gray-500">Belum Lunas</p>
+              <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">{unpaidSales}</p>
+            <p className="text-xs text-orange-600 mt-1">Menunggu pembayaran</p>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6 mb-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="Cari invoice, pelanggan, atau kasir..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <svg
+                className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+            >
+              <option value="Semua">Semua Status</option>
+              <option value="Lunas">Lunas</option>
+              <option value="Belum Lunas">Belum Lunas</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Sales Table - Desktop */}
+        <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Invoice</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Pelanggan</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kasir</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Waktu</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Item</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tipe</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
                   <tr>
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      No. Transaksi
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Tanggal
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Kasir
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Total
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Status
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Aksi
-                    </th>
+                    <td colSpan={9} className="px-6 py-10 text-center text-sm text-gray-500">
+                      Memuat data transaksi...
+                    </td>
                   </tr>
-                </thead>
-
-                <tbody className="divide-y divide-gray-100">
-                  {filteredSales.length > 0 ? (
-                    filteredSales.map((sale) => (
-                      <tr
-                        key={sale.id}
-                        className="transition hover:bg-gray-50"
-                      >
-                        <td className="px-5 py-4">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {sale.transactionNumber}
-                          </p>
-                        </td>
-
-                        <td className="px-5 py-4 text-sm text-gray-600">
-                          {sale.date}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm text-gray-600">
-                          {sale.cashier}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm font-semibold text-gray-900">
-                          {formatRupiah(sale.total)}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          {sale.status === 'LUNAS' ? (
-                            <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                              Lunas
-                            </span>
-                          ) : (
-                            <span className="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                              Belum Lunas
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="px-5 py-4">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedSale(sale)}
-                            className="text-sm font-semibold text-brand-500 transition hover:text-brand-600"
-                          >
-                            Detail
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="px-5 py-12 text-center"
-                      >
-                        <p className="text-sm font-medium text-gray-500">
-                          Tidak ada transaksi ditemukan.
-                        </p>
-
-                        <p className="mt-1 text-xs text-gray-400">
-                          Coba ubah kata pencarian atau filter status.
-                        </p>
+                ) : (
+                  filteredSales.map((sale) => (
+                    <tr key={sale.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="font-mono font-semibold text-blue-600 text-sm">{sale.invoice}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-medium text-gray-900 text-sm">{sale.customer}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-600">{sale.cashier}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-gray-900">{sale.date}</p>
+                        <p className="text-xs text-gray-500">{sale.time}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-medium text-gray-900">{sale.items} item</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-gray-900 text-sm">{formatRupiah(sale.total)}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                          {sale.payment}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                            sale.status === 'Lunas'
+                              ? 'bg-green-100 text-green-700 border-green-300'
+                              : 'bg-orange-100 text-orange-700 border-orange-300'
+                          }`}
+                        >
+                          {sale.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => setSelectedSale(sale)}
+                          className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium text-xs transition-colors"
+                        >
+                          Detail
+                        </button>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Result Info */}
-            <div className="border-t border-gray-100 px-5 py-4">
-              <p className="text-sm text-gray-500">
-                Menampilkan{' '}
-                <span className="font-semibold text-gray-900">
-                  {filteredSales.length}
-                </span>{' '}
-                dari{' '}
-                <span className="font-semibold text-gray-900">
-                  {sales.length}
-                </span>{' '}
-                transaksi
-              </p>
-            </div>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        </main>
-      </div>
+          {!loading && filteredSales.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500">Tidak ada transaksi ditemukan</p>
+            </div>
+          )}
+        </div>
 
-      {/* ============================= */}
-      {/* DETAIL TRANSACTION MODAL */}
-      {/* ============================= */}
-      {selectedSale && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setSelectedSale(null)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-gray-100 p-5 sm:p-6">
-              <div>
-                <p className="text-sm text-gray-500">
-                  Detail Transaksi
-                </p>
+        {/* Sales Cards - Mobile */}
+        <div className="md:hidden space-y-4">
+          {filteredSales.map((sale) => (
+            <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="font-mono font-bold text-blue-600 text-sm mb-1">{sale.invoice}</p>
+                  <p className="font-semibold text-gray-900">{sale.customer}</p>
+                  <p className="text-xs text-gray-500">Kasir: {sale.cashier}</p>
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                    sale.status === 'Lunas'
+                      ? 'bg-green-100 text-green-700 border-green-300'
+                      : 'bg-orange-100 text-orange-700 border-orange-300'
+                  }`}
+                >
+                  {sale.status}
+                </span>
+              </div>
 
-                <h2 className="mt-1 text-xl font-bold text-gray-900">
-                  {selectedSale.transactionNumber}
-                </h2>
+              <div className="grid grid-cols-2 gap-3 mb-3 text-sm pt-3 border-t border-gray-100">
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Waktu</p>
+                  <p className="font-medium text-gray-900 text-xs">
+                    {sale.date} {sale.time}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Tipe</p>
+                  <p className="font-medium text-gray-900">{sale.payment}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Jumlah Item</p>
+                  <p className="font-semibold text-gray-900">{sale.items} item</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 text-xs mb-0.5">Total</p>
+                  <p className="font-bold text-gray-900">{formatRupiah(sale.total)}</p>
+                </div>
               </div>
 
               <button
-                type="button"
-                onClick={() => setSelectedSale(null)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                aria-label="Tutup detail transaksi"
+                onClick={() => setSelectedSale(sale)}
+                className="w-full py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 font-medium text-sm transition-colors"
               >
-                ×
+                Lihat Detail
+              </button>
+            </div>
+          ))}
+        </div>
+        </div>
+      </div>
+
+      {/* Detail Modal */}
+      {selectedSale && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Detail Transaksi</h3>
+                <p className="text-sm text-blue-600 font-mono">{selectedSale.invoice}</p>
+              </div>
+              <button
+                onClick={() => setSelectedSale(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            {/* Transaction Information */}
-            <div className="grid grid-cols-1 gap-4 border-b border-gray-100 p-5 sm:grid-cols-2 sm:p-6">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Tanggal
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {selectedSale.date}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Kasir
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {selectedSale.cashier}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Metode Pembayaran
-                </p>
-
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {selectedSale.paymentMethod}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                  Status
-                </p>
-
-                <div className="mt-1">
-                  {selectedSale.status === 'LUNAS' ? (
-                    <span className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                      Lunas
-                    </span>
-                  ) : (
-                    <span className="inline-flex rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                      Belum Lunas
-                    </span>
-                  )}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500 mb-1">Pelanggan</p>
+                  <p className="font-semibold text-gray-900">{selectedSale.customer}</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Product List */}
-            <div className="p-5 sm:p-6">
-              <h3 className="text-base font-semibold text-gray-900">
-                Produk Dibeli
-              </h3>
-
-              <div className="mt-4 overflow-hidden rounded-xl border border-gray-100">
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[500px] text-left">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Produk
-                        </th>
-
-                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Qty
-                        </th>
-
-                        <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Harga
-                        </th>
-
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          Subtotal
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-gray-100">
-                      {selectedSale.items.map((item) => {
-                        const subtotal = item.qty * item.price;
-
-                        return (
-                          <tr key={item.id}>
-                            <td className="px-4 py-4">
-                              <p className="text-sm font-semibold text-gray-900">
-                                {item.name}
-                              </p>
-
-                              <p className="mt-1 text-xs text-gray-400">
-                                {item.sku}
-                              </p>
-                            </td>
-
-                            <td className="px-4 py-4 text-sm text-gray-600">
-                              {item.qty}
-                            </td>
-
-                            <td className="px-4 py-4 text-sm text-gray-600">
-                              {formatRupiah(item.price)}
-                            </td>
-
-                            <td className="px-4 py-4 text-right text-sm font-semibold text-gray-900">
-                              {formatRupiah(subtotal)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <div>
+                  <p className="text-gray-500 mb-1">Kasir</p>
+                  <p className="font-semibold text-gray-900">{selectedSale.cashier}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 mb-1">Tanggal & Waktu</p>
+                  <p className="font-semibold text-gray-900">
+                    {selectedSale.date} {selectedSale.time}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-500 mb-1">Tipe Penjualan</p>
+                  <p className="font-semibold text-gray-900">{selectedSale.payment}</p>
                 </div>
               </div>
 
-              {/* Total */}
-              <div className="mt-5 border-t border-gray-100 pt-5">
-                <div className="flex items-center justify-between">
-                  <span className="text-base font-semibold text-gray-700">
-                    Total Transaksi
-                  </span>
+              <div className="border-t border-gray-200 pt-4">
+                <p className="font-semibold text-gray-900 mb-3">Produk Dibeli</p>
+                {selectedSale.products.length === 0 ? (
+                  <p className="text-sm text-gray-500">Rincian item tidak tersedia.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedSale.products.map((product, idx) => (
+                      <div key={idx} className="flex justify-between items-center py-2 px-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900 text-sm">{product.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {product.qty} x {formatRupiah(product.price)}
+                          </p>
+                        </div>
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {formatRupiah(product.subtotal ?? product.qty * product.price)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-                  <span className="text-xl font-bold text-gray-900">
-                    {formatRupiah(selectedSale.total)}
-                  </span>
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-gray-600">Total Item</p>
+                  <p className="font-semibold text-gray-900">{selectedSale.items} item</p>
+                </div>
+                <div className="flex justify-between items-center text-lg">
+                  <p className="font-bold text-gray-900">Total Pembayaran</p>
+                  <p className="font-bold text-blue-600">{formatRupiah(selectedSale.total)}</p>
                 </div>
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="flex justify-end border-t border-gray-100 bg-gray-50 p-5 sm:p-6">
               <button
-                type="button"
                 onClick={() => setSelectedSale(null)}
-                className="rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
+                className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium text-sm transition-colors"
               >
                 Tutup
               </button>
@@ -657,6 +406,6 @@ const ManagerSalesPage = () => {
       )}
     </div>
   );
-};
+}
 
 export default ManagerSalesPage;

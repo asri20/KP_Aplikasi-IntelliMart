@@ -4,8 +4,9 @@ import { z } from 'zod';
  * Login schema
  */
 export const loginSchema = z.object({
-  email: z.string().email('Email tidak valid').min(1, 'Email wajib diisi'),
-  password: z.string().min(6, 'Password minimal 6 karakter'),
+  // Backend menerima email ATAU nama user (sama seperti backend-lengkap)
+  email: z.string().trim().min(1, 'Email atau username wajib diisi'),
+  password: z.string().min(1, 'Password wajib diisi'),
 });
 
 /**

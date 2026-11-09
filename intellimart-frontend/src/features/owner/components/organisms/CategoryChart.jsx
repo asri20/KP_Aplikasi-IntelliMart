@@ -1,40 +1,64 @@
-const categories = [
-  { name: 'Makanan & Minuman', value: '42', percent: '32%' },
-  { name: 'Snack', value: '28', percent: '22%' },
-  { name: 'Minuman', value: '20', percent: '16%' },
-  { name: 'Perlengkapan Rumah', value: '16', percent: '12%' },
-  { name: 'Lainnya', value: '22', percent: '18%' },
+const COLORS = ['#f97316', '#fb923c', '#facc15', '#fde047', '#cbd5e1'];
+const DOT_CLASSES = [
+  'bg-orange-500',
+  'bg-orange-400',
+  'bg-yellow-400',
+  'bg-yellow-300',
+  'bg-slate-300',
 ];
 
-const CategoryChart = () => {
+const CategoryChart = ({ catalog = [] }) => {
+  const totalProducts = catalog.length;
+
+  // Hitung distribusi kategori dari katalog produk toko aktif
+  const counts = {};
+  catalog.forEach((item) => {
+    const cat = item.category_name || item.category || 'Lainnya';
+    counts[cat] = (counts[cat] || 0) + 1;
+  });
+
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const categories = sorted.length
+    ? sorted.map(([name, value]) => ({
+        name,
+        value: String(value),
+        percentNumber: totalProducts > 0 ? Math.round((value / totalProducts) * 100) : 0,
+        percent: totalProducts > 0 ? `${Math.round((value / totalProducts) * 100)}%` : '0%',
+      }))
+    : [{ name: 'Belum ada produk', value: '0', percentNumber: 100, percent: '0%' }];
+
+  let acc = 0;
+  const gradientStops = categories
+    .map((c, idx) => {
+      const start = acc;
+      acc = Math.min(100, acc + (c.percentNumber || 20));
+      return `${COLORS[idx % COLORS.length]} ${start}% ${idx === categories.length - 1 ? 100 : acc}%`;
+    })
+    .join(', ');
+
   return (
     <section className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-      <h3 className="font-bold text-slate-900">
-        🥧 Kategori Produk
-      </h3>
+      <h3 className="font-bold text-slate-900">🥧 Kategori Produk</h3>
 
       <div className="mt-5 flex items-center gap-6">
         {/* Donut */}
         <div
           className="relative flex h-40 w-40 shrink-0 items-center justify-center rounded-full"
           style={{
-            background:
-              'conic-gradient(#f97316 0 32%, #fb923c 32% 54%, #facc15 54% 70%, #fde047 70% 82%, #cbd5e1 82% 100%)',
+            background: `conic-gradient(${gradientStops})`,
           }}
         >
           <div className="flex h-24 w-24 flex-col items-center justify-center rounded-full bg-white">
-            <span className="text-xl font-bold text-slate-900">
-              128
-            </span>
-
-            <span className="text-xs text-slate-400">
-              Produk
-            </span>
+            <span className="text-xl font-bold text-slate-900">{totalProducts}</span>
+            <span className="text-xs text-slate-400">Varian</span>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="space-y-3">
+        <div className="flex-1 space-y-3">
           {categories.map((category, index) => (
             <div
               key={category.name}
@@ -43,21 +67,10 @@ const CategoryChart = () => {
               <div className="flex items-center gap-2">
                 <span
                   className={`h-2.5 w-2.5 rounded-full ${
-                    index === 0
-                      ? 'bg-orange-500'
-                      : index === 1
-                        ? 'bg-orange-400'
-                        : index === 2
-                          ? 'bg-yellow-400'
-                          : index === 3
-                            ? 'bg-yellow-300'
-                            : 'bg-slate-300'
+                    DOT_CLASSES[index % DOT_CLASSES.length]
                   }`}
                 />
-
-                <span className="text-slate-600">
-                  {category.name}
-                </span>
+                <span className="text-slate-600">{category.name}</span>
               </div>
 
               <span className="font-semibold text-slate-500">

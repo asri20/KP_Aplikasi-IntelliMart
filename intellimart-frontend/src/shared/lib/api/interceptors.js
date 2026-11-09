@@ -43,7 +43,11 @@ axiosClient.interceptors.response.use(
     const { status } = error.response;
 
     // Handle 401 Unauthorized - Try to refresh token
-    if (status === 401 && !originalRequest._retry) {
+    // Endpoint auth (login/register) mengembalikan 401 untuk kredensial salah,
+    // jangan diperlakukan sebagai sesi kadaluwarsa.
+    const isAuthEndpoint = /\/auth\/(login|register)/.test(originalRequest?.url || '');
+
+    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       const refreshToken = useAuthStore.getState().refreshToken;

@@ -4,3 +4,6 @@ export { default as ProdukPage } from './ProdukPage';
 export { default as InventoryPage } from './InventoryPage';
 export { default as ManajemenManagerPage } from './ManajemenManagerPage';
 export { default as StoreDetailPage } from './StoreDetailPage';
+export { default as KategoriPage } from './KategoriPage';
+export { default as PenjualanPage } from './PenjualanPage';
+export { default as LaporanPage } from './LaporanPage';
