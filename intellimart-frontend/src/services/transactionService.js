@@ -9,95 +9,52 @@ const api = axios.create({
   },
 });
 
-/**
- * Mengambil data produk
- */
 export const getProducts = async () => {
-  try {
-    const response = await api.get('/products');
-    return response.data;
-  } catch (error) {
-    console.error('Gagal mengambil data produk:', error);
-    throw error;
-  }
+  const response = await api.get('/products');
+  return response.data;
 };
 
-/**
- * Mengambil data stok produk berdasarkan toko
- */
 export const getProductStocks = async (storeId = 1) => {
-  try {
-    const response = await api.get('/stocks', {
-      params: {
-        store_id: storeId,
-      },
-    });
+  const response = await api.get('/stocks', {
+    params: { store_id: storeId },
+  });
 
-    return response.data;
-  } catch (error) {
-    console.error('Gagal mengambil data stok produk:', error);
-    throw error;
-  }
+  return response.data;
+};
+
+export const getPaymentMethods = async () => {
+  const response = await api.get('/transactions/payment-methods');
+  return response.data;
+};
+
+export const getPOSCustomers = async (saleType) => {
+  const response = await api.get('/transactions/customers', {
+    params: {
+      sale_type: saleType,
+    },
+  });
+
+  return response.data;
 };
 
 /**
- * @typedef {Object} CheckoutItem
- * @property {number} product_id
- * @property {number} price_code_id
- * @property {number} qty
- * @property {number} price
+ * @param {Record<string, any>} payload
  */
 
-/**
- * @typedef {Object} CheckoutPayload
- * @property {number} cashier_id
- * @property {number} store_id
- * @property {string} sale_type
- * @property {string} status
- * @property {string} discount_type
- * @property {number} discount_value
- * @property {CheckoutItem[]} items
- */
-
-/**
- * @property {number} product_id
- * @property {number} price_code_id
- * @property {number} qty
- * @property {number} price
- */
-
-/**
- * @property {number} cashier_id
- * @property {number} store_id
- * @property {string} sale_type
- * @property {string} status
- * @property {string} discount_type
- * @property {number} discount_value
- * @property {CheckoutItem[]} items
- */
-
-/**
- * @typedef {Object} CheckoutResponse
- * @property {boolean} success
- * @property {string} message
- * @property {number} transaction_id
- * @property {number} subtotal
- * @property {number} discount_amount
- * @property {number} total_price
- */
-
-/**
- * Checkout transaksi penjualan
- * @param {CheckoutPayload} payload
- * @returns {Promise<CheckoutResponse>}
- */
 export const checkoutTransaction = async (payload) => {
-  try {
-    const response = await api.post('/transactions/checkout', payload);
+  const response = await api.post('/transactions/checkout', payload);
+  return response.data;
+};
 
-    return response.data;
-  } catch (error) {
-    console.error('Gagal checkout transaksi:', error);
-    throw error;
-  }
+export const getTransactionHistory = async () => {
+  const response = await api.get('/transactions');
+  return response.data;
+};
+
+/**
+ * @param {string | number} transactionId
+ */
+export const getTransactionDetail = async (transactionId) => {
+  const response = await api.get(`/transactions/${transactionId}`);
+  return response.data;
 };

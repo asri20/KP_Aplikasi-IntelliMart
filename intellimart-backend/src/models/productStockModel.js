@@ -1,5 +1,56 @@
 const pool = require("../config/db");
 
+/**
+ * Menambahkan daftar harga grosir ke setiap data stok.
+ * Pengambilan tier dilakukan sekaligus untuk menghindari query berulang
+ * pada setiap produk.
+ */
+async function attachPriceTiers(rows) {
+  if (!rows.length) return rows;
+
+  const priceCodeIds = [
+    ...new Set(
+      rows
+        .map((row) => row.price_code_id)
+        .filter((id) => id !== null && id !== undefined),
+    ),
+  ];
+
+  if (!priceCodeIds.length) {
+    return rows.map((row) => ({
+      ...row,
+      price_tiers: [],
+    }));
+  }
+
+  const [tierRows] = await pool.query(
+    `SELECT price_code_id, min_qty, max_qty, unit_price
+     FROM tr_tier_price
+     WHERE price_code_id IN (?)
+     ORDER BY price_code_id ASC, min_qty ASC`,
+    [priceCodeIds],
+  );
+
+  const tierMap = {};
+
+  for (const tier of tierRows) {
+    if (!tierMap[tier.price_code_id]) {
+      tierMap[tier.price_code_id] = [];
+    }
+
+    tierMap[tier.price_code_id].push({
+      min_qty: Number(tier.min_qty),
+      max_qty: tier.max_qty === null ? null : Number(tier.max_qty),
+      unit_price: Number(tier.unit_price),
+    });
+  }
+
+  return rows.map((row) => ({
+    ...row,
+    price_tiers: tierMap[row.price_code_id] || [],
+  }));
+}
+
 async function findAll(store_id, variant_id) {
   const conditions = [];
   const params = [];
@@ -8,6 +59,7 @@ async function findAll(store_id, variant_id) {
     conditions.push("ps.store_id = ?");
     params.push(store_id);
   }
+
   if (variant_id) {
     conditions.push("ps.variant_id = ?");
     params.push(variant_id);
@@ -18,7 +70,14 @@ async function findAll(store_id, variant_id) {
     : "";
 
   const [rows] = await pool.query(
-    `SELECT ps.*, s.store_name, v.variant_name, v.sku, p.product_name, pc.code AS price_code
+    `SELECT
+       ps.*,
+       s.store_name,
+       v.variant_name,
+       v.sku,
+       p.product_name,
+       pc.code AS price_code,
+       pc.is_active AS price_code_active
      FROM tr_product_stock ps
      JOIN tm_store s ON s.id = ps.store_id
      JOIN ms_product_variant v ON v.id = ps.variant_id
@@ -28,12 +87,20 @@ async function findAll(store_id, variant_id) {
      ORDER BY ps.store_id ASC, ps.variant_id ASC`,
     params,
   );
-  return rows;
+
+  return attachPriceTiers(rows);
 }
 
 async function findOne(store_id, variant_id) {
   const [rows] = await pool.query(
-    `SELECT ps.*, s.store_name, v.variant_name, v.sku, p.product_name, pc.code AS price_code
+    `SELECT
+       ps.*,
+       s.store_name,
+       v.variant_name,
+       v.sku,
+       p.product_name,
+       pc.code AS price_code,
+       pc.is_active AS price_code_active
      FROM tr_product_stock ps
      JOIN tm_store s ON s.id = ps.store_id
      JOIN ms_product_variant v ON v.id = ps.variant_id
@@ -42,12 +109,16 @@ async function findOne(store_id, variant_id) {
      WHERE ps.store_id = ? AND ps.variant_id = ?`,
     [store_id, variant_id],
   );
-  return rows[0] || null;
+
+  if (!rows.length) return null;
+
+  const data = await attachPriceTiers(rows);
+  return data[0];
 }
 
 /**
- * Buat baris baru (harga & pengaturan awal untuk kombinasi toko+varian ini).
- * stock SELALU dimulai dari 0 -- kalau butuh stok awal, harus lewat tt_stock_movement (movement_type INITIAL).
+ * Buat baris baru.
+ * Stok selalu dimulai dari 0.
  */
 async function create({
   store_id,
@@ -58,7 +129,9 @@ async function create({
   min_stock,
 }) {
   await pool.query(
-    `INSERT INTO tr_product_stock (store_id, variant_id, stock, base_price, price_code_id, discount_store, min_stock)
+    `INSERT INTO tr_product_stock
+      (store_id, variant_id, stock, base_price,
+       price_code_id, discount_store, min_stock)
      VALUES (?, ?, 0, ?, ?, ?, ?)`,
     [
       store_id,
@@ -69,12 +142,13 @@ async function create({
       min_stock || 0,
     ],
   );
+
   return findOne(store_id, variant_id);
 }
 
 /**
- * Update HARGA & PENGATURAN saja (base_price, price_code_id, discount_store, min_stock).
- * TIDAK ADA parameter 'stock' di sini secara sengaja.
+ * Update harga dan pengaturan saja.
+ * Tidak mengubah stok.
  */
 async function update(
   store_id,
@@ -83,7 +157,10 @@ async function update(
 ) {
   await pool.query(
     `UPDATE tr_product_stock
-     SET base_price = ?, price_code_id = ?, discount_store = ?, min_stock = ?
+     SET base_price = ?,
+         price_code_id = ?,
+         discount_store = ?,
+         min_stock = ?
      WHERE store_id = ? AND variant_id = ?`,
     [
       base_price,
@@ -94,6 +171,7 @@ async function update(
       variant_id,
     ],
   );
+
   return findOne(store_id, variant_id);
 }
 
@@ -102,10 +180,18 @@ async function deleteOne(store_id, variant_id) {
   if (!existing) return null;
 
   await pool.query(
-    "DELETE FROM tr_product_stock WHERE store_id = ? AND variant_id = ?",
+    `DELETE FROM tr_product_stock
+     WHERE store_id = ? AND variant_id = ?`,
     [store_id, variant_id],
   );
+
   return existing;
 }
 
-module.exports = { findAll, findOne, create, update, delete: deleteOne };
+module.exports = {
+  findAll,
+  findOne,
+  create,
+  update,
+  delete: deleteOne,
+};

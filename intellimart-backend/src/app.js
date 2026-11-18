@@ -20,6 +20,9 @@ const transactionRoutes = require("./routes/transactionRoutes");
 
 const app = express();
 
+const salesAnalyticsRoutes = require("./routes/salesAnalyticsRoutes");
+const productRecommendationRoutes = require("./routes/productRecommendationRoutes");
+
 // =============================================
 // MIDDLEWARE
 // =============================================
@@ -27,9 +30,12 @@ const app = express();
 // CORS - Izinkan frontend React mengakses API
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: "http://localhost:3000",
   }),
 );
+
+app.use("/api/sales-analytics", salesAnalyticsRoutes);
+app.use("/api/recommendations", productRecommendationRoutes);
 
 // Parse JSON body
 app.use(express.json());

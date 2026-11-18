@@ -11,7 +11,7 @@
     Inter,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
 }
 
@@ -229,9 +229,7 @@
 .search-box input:focus {
   border-color: #f97316;
 
-  box-shadow:
-    0 0 0 3px
-    rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .search-icon {
@@ -254,8 +252,7 @@
 .products-grid {
   display: grid;
 
-  grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 
   gap: 16px;
 }
@@ -283,9 +280,7 @@
 
   border-color: #fdba74;
 
-  box-shadow:
-    0 8px 20px
-    rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .product-card-top {
@@ -393,9 +388,7 @@
 .add-product-button:hover {
   background: #ea580c;
 
-  box-shadow:
-    0 4px 10px
-    rgba(249, 115, 22, 0.2);
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
 }
 
 .add-product-button:disabled {
@@ -417,8 +410,7 @@
 
   top: 96px;
 
-  height:
-    calc(100vh - 120px);
+  height: calc(100vh - 120px);
 
   background: #ffffff;
 
@@ -431,16 +423,13 @@
 
   overflow: hidden;
 
-  box-shadow:
-    0 4px 12px
-    rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .cart-header {
   padding: 20px;
 
-  border-bottom:
-    1px solid #eef0f4;
+  border-bottom: 1px solid #eef0f4;
 
   display: flex;
 
@@ -543,8 +532,7 @@
 .cart-item {
   padding: 16px 0;
 
-  border-bottom:
-    1px solid #f0f1f4;
+  border-bottom: 1px solid #f0f1f4;
 }
 
 .cart-item:last-child {
@@ -612,8 +600,7 @@
 
   align-items: center;
 
-  border:
-    1px solid #e5e7eb;
+  border: 1px solid #e5e7eb;
 
   border-radius: 7px;
 
@@ -680,8 +667,7 @@
 .cart-footer {
   padding: 20px;
 
-  border-top:
-    1px solid #eef0f4;
+  border-top: 1px solid #eef0f4;
 
   background: #ffffff;
 }
@@ -707,8 +693,7 @@
 .summary-divider {
   border: none;
 
-  border-top:
-    1px dashed #dfe3e8;
+  border-top: 1px dashed #dfe3e8;
 
   margin: 14px 0;
 }
@@ -763,9 +748,7 @@
 .checkout-button:hover {
   background: #ea580c;
 
-  box-shadow:
-    0 5px 12px
-    rgba(249, 115, 22, 0.25);
+  box-shadow: 0 5px 12px rgba(249, 115, 22, 0.25);
 }
 
 .checkout-button:disabled {
@@ -805,8 +788,7 @@
 
   background: #ffffff;
 
-  border:
-    1px dashed #d1d5db;
+  border: 1px dashed #d1d5db;
 
   border-radius: 12px;
 
@@ -842,8 +824,7 @@
 
 @media (max-width: 1200px) {
   .products-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sales-content {
@@ -865,8 +846,7 @@
   }
 
   .products-grid {
-    grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -893,5 +873,347 @@
 
   .search-box {
     width: 100%;
+  }
+}
+
+/* =========================================================
+   PELANGGAN POS
+========================================================= */
+
+.pos-customer-section {
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.pos-customer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.pos-customer-header label,
+.payment-section > label {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pos-customer-type {
+  padding: 4px 10px;
+  color: #c65b13;
+  background: #fff1e6;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pos-customer-section select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: #374151;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.pos-customer-section select:focus {
+  border-color: #f07824;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(240, 120, 36, 0.12);
+}
+
+.pos-customer-section select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.pos-customer-empty,
+.pos-customer-selected {
+  display: block;
+  margin-top: 7px;
+  font-size: 12px;
+}
+
+.pos-customer-empty {
+  color: #dc2626;
+}
+
+.pos-customer-selected {
+  color: #15803d;
+}
+
+/* =========================================================
+   JENIS TRANSAKSI
+========================================================= */
+
+.sale-type-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.sale-type-section h2 {
+  margin: 0 0 12px;
+  color: #374151;
+  font-size: 15px;
+}
+
+.sale-type-section p {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.sale-type-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sale-type-button {
+  padding: 10px 22px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sale-type-button.active {
+  border-color: #ff6b00;
+  background: #ff6b00;
+  color: #fff;
+}
+
+.sale-type-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   DISKON DAN PEMBAYARAN
+========================================================= */
+
+.discount-control {
+  margin-bottom: 16px;
+}
+
+.discount-control > label,
+.payment-extra > label {
+  display: block;
+  margin-bottom: 8px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.discount-inputs {
+  display: flex;
+  gap: 8px;
+}
+
+.discount-inputs select,
+.discount-inputs input {
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.discount-inputs select {
+  flex: 0 0 115px;
+}
+
+.discount-inputs input {
+  flex: 1;
+}
+
+.payment-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.payment-section > select,
+.payment-extra input {
+  width: 100%;
+  min-height: 40px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.payment-extra {
+  margin-top: 12px;
+}
+
+.payment-extra > label {
+  margin-top: 12px;
+}
+
+.change-row,
+.payment-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.change-row strong {
+  color: #15803d;
+}
+
+.cart-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.wholesale-warning {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.wholesale-tier-info {
+  margin: 8px 0;
+  color: #6b7280;
+  font-size: 11px;
+}
+
+.wholesale-unavailable {
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.cart-quantity-input {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.cart-quantity-input input {
+  width: 65px;
+  margin-left: 8px;
+  padding: 5px;
+  border: 1px solid #d1d5db;
+  border-radius: 5px;
+}
+
+.pos-upsell-panel {
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid #f0dfd0;
+  border-radius: 10px;
+  background: #fffaf5;
+}
+
+.pos-upsell-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pos-upsell-heading strong {
+  color: #343434;
+  font-size: 13px;
+}
+
+.pos-upsell-heading p {
+  margin: 5px 0 0;
+  color: #888;
+  font-size: 11px;
+}
+
+.pos-upsell-heading > span {
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: #ffead8;
+  color: #bd5b13;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.pos-upsell-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid #f0e8e1;
+}
+
+.pos-upsell-product,
+.pos-upsell-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pos-upsell-product strong {
+  color: #333;
+  font-size: 12px;
+}
+
+.pos-upsell-product span,
+.pos-upsell-product small,
+.pos-upsell-status small,
+.pos-upsell-info {
+  color: #888;
+  font-size: 10px;
+}
+
+.pos-upsell-status {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.pos-upsell-status strong {
+  color: #27834b;
+  font-size: 11px;
+}
+
+.pos-upsell-status .pos-upsell-unavailable {
+  color: #c45b35;
+}
+
+.pos-upsell-info {
+  margin: 12px 0 2px;
+  line-height: 1.6;
+}
+
+@media (max-width: 500px) {
+  .pos-upsell-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .pos-upsell-status {
+    align-items: flex-start;
+    text-align: left;
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SalesPOS from '../pages/SalesPOS';
+import SalesAnalytics from '../pages/SalesAnalytics';
 
 export default function AppRoutes() {
   return (
@@ -10,6 +11,8 @@ export default function AppRoutes() {
 
       {/* Root dan halaman yang tidak ditemukan diarahkan ke Sales POS */}
       <Route path="*" element={<Navigate to="/pos" replace />} />
+
+      <Route path="/analisis-penjualan" element={<SalesAnalytics />} />
     </Routes>
   );
 }
