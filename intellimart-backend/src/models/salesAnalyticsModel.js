@@ -25,7 +25,11 @@ const SalesAnalyticsModel = {
         ON cp.user_id = u.id
       LEFT JOIN tt_transaction t
         ON t.customer_id = u.id
-       AND t.sale_type = cp.customer_type
+       AND (
+  (cp.customer_type = 'RETAIL' AND t.sale_type = 'RETAIL')
+  OR
+  (cp.customer_type = 'RESELLER' AND t.sale_type = 'WHOLESALE')
+)
        AND t.status IN ('PAID', 'SUCCESS')
       LEFT JOIN tt_transaction_detail td
         ON td.transaction_id = t.id

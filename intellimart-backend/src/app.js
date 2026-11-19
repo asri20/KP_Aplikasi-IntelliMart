@@ -23,6 +23,8 @@ const app = express();
 const salesAnalyticsRoutes = require("./routes/salesAnalyticsRoutes");
 const productRecommendationRoutes = require("./routes/productRecommendationRoutes");
 
+const dashboardRoutes = require("./routes/dashboardRoutes");
+
 // =============================================
 // MIDDLEWARE
 // =============================================
@@ -36,6 +38,7 @@ app.use(
 
 app.use("/api/sales-analytics", salesAnalyticsRoutes);
 app.use("/api/recommendations", productRecommendationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Parse JSON body
 app.use(express.json());
@@ -91,6 +94,7 @@ app.use("/api/tier-prices", tierPriceRoutes);
 app.use("/api/stock-movements", stockMovementRoutes);
 app.use("/api/unit-conversions", unitConversionRoutes);
 app.use("/api/transactions", transactionRoutes);
+
 // =============================================
 // ERROR HANDLING MIDDLEWARE
 // =============================================
